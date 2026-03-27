@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LinkVault</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <!-- ============================================================ -->
+  <!-- Loading State -->
+  <!-- ============================================================ -->
+  <div id="loading-view" class="view">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- Login View -->
+  <!-- ============================================================ -->
+  <div id="login-view" class="view hidden">
+    <div class="masthead">
+      <span class="logo">LinkVault</span>
+      <div class="dot"></div>
+    </div>
+    <p class="subtitle">Sign in to save links</p>
+    <form id="login-form">
+      <input
+        type="email"
+        id="login-email"
+        placeholder="Email"
+        class="input"
+        required
+        autocomplete="email"
+      />
+      <input
+        type="password"
+        id="login-password"
+        placeholder="Password"
+        class="input"
+        required
+        autocomplete="current-password"
+      />
+      <button type="submit" id="login-btn" class="btn-primary">
+        Sign In
+      </button>
+      <p id="login-error" class="error hidden"></p>
+    </form>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- Save View -->
+  <!-- ============================================================ -->
+  <div id="save-view" class="view hidden">
+    <div class="masthead">
+      <span class="logo">LinkVault</span>
+      <div class="dot"></div>
+      <div class="spacer"></div>
+      <button id="logout-btn" class="btn-ghost btn-sm" title="Sign out">
+        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3-3h-9m9 0l-3-3m3 3l-3 3" />
+        </svg>
+      </button>
+    </div>
+
+    <div class="hairline"></div>
+
+    <!-- Tab Preview -->
+    <div id="tab-preview" class="tab-preview">
+      <p id="tab-title" class="tab-title">Loading...</p>
+      <p id="tab-url" class="tab-url"></p>
+    </div>
+
+    <div class="hairline"></div>
+
+    <!-- Collection Picker -->
+    <div class="field">
+      <label class="label">Collection</label>
+      <select id="collection-select" class="input select">
+        <option value="">None (uncategorized)</option>
+      </select>
+    </div>
+
+    <!-- Save Button -->
+    <button id="save-btn" class="btn-primary">
+      Save to LinkVault
+    </button>
+
+    <!-- Status Messages -->
+    <div id="save-status" class="status hidden"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

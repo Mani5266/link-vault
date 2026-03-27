@@ -1,0 +1,15 @@
+-- ============================================================
+-- Seed Data: Default collections for new users
+-- ============================================================
+-- Note: This seed file is for reference / local development.
+-- In production, default collections are created via the
+-- CollectionService.seedDefaults() method when a new user signs up.
+
+-- Example seed (would need a real user_id):
+-- INSERT INTO collections (user_id, name, slug, emoji, color, is_default, position) VALUES
+--   ('USER_UUID', 'Recipes',       'recipes',       '🍳', '#f97316', true, 0),
+--   ('USER_UUID', 'Fitness',       'fitness',       '💪', '#22c55e', true, 1),
+--   ('USER_UUID', 'Business',      'business',      '💼', '#3b82f6', true, 2),
+--   ('USER_UUID', 'Tech',          'tech',          '💻', '#8b5cf6', true, 3),
+--   ('USER_UUID', 'Shopping',      'shopping',      '🛍️', '#ec4899', true, 4),
+--   ('USER_UUID', 'Entertainment', 'entertainment', '🎬', '#eab308', true, 5);

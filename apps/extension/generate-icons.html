@@ -1,0 +1,60 @@
+<!-- 
+  Open this file in a browser, right-click each canvas, and "Save image as" 
+  to get icon16.png, icon32.png, icon48.png, icon128.png
+  
+  Or just use any icon generator tool with the LinkVault "LV" branding.
+-->
+<!DOCTYPE html>
+<html>
+<head><title>LinkVault Icon Generator</title></head>
+<body style="background: #222; padding: 40px; font-family: sans-serif; color: #eee;">
+  <h2>LinkVault Extension Icons</h2>
+  <p>Right-click each icon below and "Save image as" with the filename shown.</p>
+  <div style="display: flex; gap: 40px; align-items: end; margin-top: 20px;">
+    <div>
+      <canvas id="c16" width="16" height="16"></canvas>
+      <p>icon16.png</p>
+    </div>
+    <div>
+      <canvas id="c32" width="32" height="32"></canvas>
+      <p>icon32.png</p>
+    </div>
+    <div>
+      <canvas id="c48" width="48" height="48"></canvas>
+      <p>icon48.png</p>
+    </div>
+    <div>
+      <canvas id="c128" width="128" height="128"></canvas>
+      <p>icon128.png</p>
+    </div>
+  </div>
+  <script>
+    function drawIcon(canvasId, size) {
+      const c = document.getElementById(canvasId);
+      const ctx = c.getContext("2d");
+      
+      // Background - deep ink
+      ctx.fillStyle = "#0a0a0c";
+      ctx.fillRect(0, 0, size, size);
+      
+      // Accent bar on top (terracotta)
+      const barHeight = Math.max(2, Math.round(size * 0.06));
+      ctx.fillStyle = "#c45d3e";
+      ctx.fillRect(0, 0, size, barHeight);
+      
+      // "LV" text
+      const fontSize = Math.round(size * 0.42);
+      ctx.fillStyle = "#e8e4de";
+      ctx.font = `bold ${fontSize}px "Segoe UI", Arial, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("LV", size / 2, size / 2 + barHeight / 2);
+    }
+    
+    drawIcon("c16", 16);
+    drawIcon("c32", 32);
+    drawIcon("c48", 48);
+    drawIcon("c128", 128);
+  </script>
+</body>
+</html>

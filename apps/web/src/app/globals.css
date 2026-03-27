@@ -1,0 +1,273 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   LinkVault — Editorial Design System
+   Warm dark palette · Magazine-inspired · Typographic authority
+   ============================================================ */
+
+:root {
+  /* Surfaces */
+  --color-bg: #0a0a0c;
+  --color-surface: #111113;
+  --color-surface-raised: #161618;
+  --color-surface-overlay: #1c1c1f;
+  --color-surface-hover: #1c1c1f;
+
+  /* Borders — thin hairlines, warm tones */
+  --color-border: #242427;
+  --color-border-subtle: #1c1c1f;
+  --color-border-hover: #2e2e32;
+
+  /* Text — warm paper tones */
+  --color-text: #e8e4de;
+  --color-text-secondary: #a09a90;
+  --color-text-muted: #6b6660;
+  --color-text-faint: #4a4642;
+
+  /* Accent — terracotta/rust */
+  --color-accent: #c45d3e;
+  --color-accent-hover: #d4714f;
+  --color-accent-subtle: rgba(196, 93, 62, 0.08);
+
+  /* Gold — AI elements */
+  --color-gold: #c9a84c;
+  --color-gold-subtle: rgba(201, 168, 76, 0.08);
+
+  /* Semantic */
+  --color-success: #5a9e6f;
+  --color-danger: #c44e4e;
+
+  /* Layout */
+  --sidebar-width: 260px;
+  --header-height: 56px;
+
+  /* Radii — editorial: mostly sharp, selective rounding */
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+
+  /* Shadows — subtle, warm */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 20px rgba(196, 93, 62, 0.06);
+}
+
+/* ============================================================
+   Base Styles
+   ============================================================ */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* ============================================================
+   Scrollbar — Minimal, warm
+   ============================================================ */
+
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-faint);
+}
+
+/* ============================================================
+   Utility Classes
+   ============================================================ */
+
+@layer utilities {
+  /* Editorial uppercase labels */
+  .editorial-label {
+    @apply uppercase tracking-editorial text-label font-medium;
+  }
+
+  /* Thin hairline rule */
+  .hairline {
+    border-color: var(--color-border);
+    border-width: 0.5px;
+  }
+
+  /* Accent top-border for cards */
+  .card-accent-top {
+    position: relative;
+  }
+  .card-accent-top::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--color-accent);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .card-accent-top:hover::before {
+    opacity: 1;
+  }
+
+  /* Warm glass effect */
+  .glass-warm {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    background: rgba(17, 17, 19, 0.85);
+    border: 0.5px solid var(--color-border);
+  }
+
+  /* Shimmer loading */
+  .shimmer-editorial {
+    background: linear-gradient(
+      90deg,
+      var(--color-surface) 25%,
+      var(--color-surface-raised) 50%,
+      var(--color-surface) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2.5s ease-in-out infinite;
+  }
+
+  /* Monospace domain styling */
+  .mono-domain {
+    font-family: 'DM Mono', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.6875rem;
+    letter-spacing: 0.02em;
+    color: var(--color-text-muted);
+  }
+}
+
+/* ============================================================
+   Focus Styles — Warm accent ring
+   ============================================================ */
+
+:focus-visible {
+  outline: 1.5px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   Selection Styles
+   ============================================================ */
+
+::selection {
+  background-color: var(--color-accent-subtle);
+  color: var(--color-accent-hover);
+}
+
+/* ============================================================
+   Form Input Base — Editorial treatment
+   ============================================================ */
+
+@layer components {
+  .input-editorial {
+    @apply w-full px-3.5 py-2.5 text-sm font-body
+      bg-ink-50 border border-ink-300
+      text-paper placeholder:text-paper-faint
+      transition-colors duration-150
+      outline-none;
+    border-radius: var(--radius-sm);
+  }
+  .input-editorial:focus {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 1px var(--color-accent);
+  }
+  .input-editorial:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2
+      px-5 py-2.5 text-sm font-medium
+      bg-accent text-white
+      transition-all duration-150
+      disabled:opacity-50 disabled:cursor-not-allowed;
+    border-radius: var(--radius-sm);
+  }
+  .btn-primary:hover:not(:disabled) {
+    background-color: var(--color-accent-hover);
+  }
+
+  /* Ghost button */
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2
+      px-4 py-2 text-sm
+      text-paper-muted
+      transition-colors duration-150
+      disabled:opacity-50;
+    border-radius: var(--radius-sm);
+  }
+  .btn-ghost:hover:not(:disabled) {
+    color: var(--color-text);
+    background-color: var(--color-surface-hover);
+  }
+
+  /* Danger button */
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2
+      px-5 py-2.5 text-sm font-medium
+      bg-danger text-white
+      transition-all duration-150
+      disabled:opacity-50 disabled:cursor-not-allowed;
+    border-radius: var(--radius-sm);
+  }
+  .btn-danger:hover:not(:disabled) {
+    background-color: var(--color-danger);
+    filter: brightness(1.15);
+  }
+
+  /* Modal backdrop */
+  .modal-backdrop {
+    @apply fixed inset-0 z-[100] flex items-start justify-center pt-[15vh]
+      bg-black/70 animate-fade-in;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  /* Modal panel */
+  .modal-panel {
+    @apply w-full mx-4 border border-ink-300
+      bg-ink-50 shadow-lg animate-slide-up;
+    border-radius: var(--radius-lg);
+    max-width: 480px;
+  }
+
+  /* Modal header */
+  .modal-header {
+    @apply flex items-center justify-between px-6 py-4 border-b border-ink-300;
+  }
+
+  /* Modal title */
+  .modal-title {
+    @apply font-display font-bold text-heading text-paper;
+  }
+}
