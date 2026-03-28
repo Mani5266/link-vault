@@ -219,7 +219,6 @@ export function useLinks(options: UseLinksOptions = {}) {
     // when the underlying filter/search/collection actually changed.
     fetchLinks();
     prevDepsRef.current = currentDeps;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentDeps, accessToken]);
 
   // ---- Mutations ----
