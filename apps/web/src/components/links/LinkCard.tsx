@@ -298,6 +298,7 @@ function GridCard({
             <ContextMenu
               link={link}
               copied={copied}
+              anchorRef={menuRef}
               onCopy={onCopy}
               onClose={onMenuClose}
               onEdit={onEdit}
@@ -550,6 +551,7 @@ function ListRow({
             <ContextMenu
               link={link}
               copied={copied}
+              anchorRef={menuRef}
               onCopy={onCopy}
               onClose={onMenuClose}
               onEdit={onEdit}
@@ -634,6 +636,7 @@ function SummaryPanel({
 function ContextMenu({
   link,
   copied,
+  anchorRef,
   onCopy,
   onClose,
   onEdit,
@@ -646,6 +649,7 @@ function ContextMenu({
 }: {
   link: Link;
   copied: boolean;
+  anchorRef: React.RefObject<HTMLDivElement>;
   onCopy: () => void;
   onClose: () => void;
   onEdit?: (link: Link) => void;
@@ -657,18 +661,35 @@ function ContextMenu({
   onViewNotes?: (link: Link) => void;
 }) {
   const menuElRef = useRef<HTMLDivElement>(null);
-  const [flipUp, setFlipUp] = useState(false);
+  const [pos, setPos] = useState<{ top?: number; bottom?: number; right: number }>({ right: 0 });
 
-  // After first paint, check if the menu overflows the viewport bottom.
-  // If so, flip it to open upward instead.
+  // Position the fixed menu relative to the anchor button.
+  // If it would overflow the viewport bottom, flip upward.
   useEffect(() => {
-    const el = menuElRef.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    if (rect.bottom > window.innerHeight - 8) {
-      setFlipUp(true);
+    const anchor = anchorRef.current;
+    const menu = menuElRef.current;
+    if (!anchor || !menu) return;
+
+    const anchorRect = anchor.getBoundingClientRect();
+    const menuHeight = menu.scrollHeight;
+    const viewportH = window.innerHeight;
+    const rightOffset = window.innerWidth - anchorRect.right;
+
+    // Default: open below the anchor
+    const spaceBelow = viewportH - anchorRect.bottom - 8;
+    const spaceAbove = anchorRect.top - 8;
+
+    if (menuHeight <= spaceBelow) {
+      // Enough space below
+      setPos({ top: anchorRect.bottom + 4, right: rightOffset });
+    } else if (menuHeight <= spaceAbove) {
+      // Flip upward
+      setPos({ bottom: viewportH - anchorRect.top + 4, right: rightOffset });
+    } else {
+      // Not enough space either way — open below and let it scroll
+      setPos({ top: anchorRect.bottom + 4, right: rightOffset });
     }
-  }, []);
+  }, [anchorRef]);
 
   function action(fn?: (link: Link) => void) {
     return () => {
@@ -680,10 +701,12 @@ function ContextMenu({
   return (
     <div
       ref={menuElRef}
-      className={cn(
-        "absolute right-0 w-48 bg-ink-50 z-50 py-1 animate-scale-in context-menu max-h-[70vh] overflow-y-auto",
-        flipUp ? "bottom-full mb-1" : "top-full mt-1"
-      )}
+      className="fixed w-48 bg-ink-50 z-[100] py-1 animate-scale-in context-menu max-h-[70vh] overflow-y-auto"
+      style={{
+        top: pos.top != null ? `${pos.top}px` : undefined,
+        bottom: pos.bottom != null ? `${pos.bottom}px` : undefined,
+        right: `${pos.right}px`,
+      }}
     >
       <MenuButton onClick={() => { onCopy(); }}>
         {copied ? "Copied!" : "Copy URL"}
