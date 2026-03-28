@@ -1,7 +1,9 @@
 import cors from "cors";
 import { env } from "./env";
+import { logger } from "../utils/logger";
 
 const allowedOrigins = env.CORS_ORIGIN.split(",").map((origin) => origin.trim());
+logger.info({ allowedOrigins }, "CORS allowed origins configured");
 
 export const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
@@ -16,7 +18,7 @@ export const corsOptions: cors.CorsOptions = {
     if (origin.startsWith("chrome-extension://")) {
       const extensionId = process.env.CHROME_EXTENSION_ID;
       if (extensionId && origin !== `chrome-extension://${extensionId}`) {
-        callback(new Error("Not allowed by CORS"));
+        callback(null, false);
         return;
       }
       callback(null, true);
@@ -29,7 +31,8 @@ export const corsOptions: cors.CorsOptions = {
       return;
     }
 
-    callback(new Error("Not allowed by CORS"));
+    // Reject — don't throw an Error (which causes 500), just deny CORS headers
+    callback(null, false);
   },
   credentials: true,
   methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
