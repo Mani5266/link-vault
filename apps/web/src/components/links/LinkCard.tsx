@@ -656,6 +656,20 @@ function ContextMenu({
   onToggleReadingStatus?: (link: Link, status: ReadingStatus | null) => void;
   onViewNotes?: (link: Link) => void;
 }) {
+  const menuElRef = useRef<HTMLDivElement>(null);
+  const [flipUp, setFlipUp] = useState(false);
+
+  // After first paint, check if the menu overflows the viewport bottom.
+  // If so, flip it to open upward instead.
+  useEffect(() => {
+    const el = menuElRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    if (rect.bottom > window.innerHeight - 8) {
+      setFlipUp(true);
+    }
+  }, []);
+
   function action(fn?: (link: Link) => void) {
     return () => {
       fn?.(link);
@@ -665,7 +679,11 @@ function ContextMenu({
 
   return (
     <div
-      className="absolute right-0 top-full mt-1 w-48 bg-ink-50 z-50 py-1 animate-scale-in context-menu"
+      ref={menuElRef}
+      className={cn(
+        "absolute right-0 w-48 bg-ink-50 z-50 py-1 animate-scale-in context-menu max-h-[70vh] overflow-y-auto",
+        flipUp ? "bottom-full mb-1" : "top-full mt-1"
+      )}
     >
       <MenuButton onClick={() => { onCopy(); }}>
         {copied ? "Copied!" : "Copy URL"}
