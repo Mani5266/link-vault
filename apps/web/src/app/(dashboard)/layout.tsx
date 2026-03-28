@@ -223,45 +223,10 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
               isIndex
             />
             <SidebarItem
-              emoji="="
-              label="Duplicates"
-              href="/duplicates"
-              active={pathname === "/duplicates"}
-              isIndex
-            />
-            <SidebarItem
               emoji=">"
               label="Reading Queue"
               href="/reading-queue"
               active={pathname === "/reading-queue"}
-              isIndex
-            />
-            <SidebarItem
-              emoji="~"
-              label="Link Health"
-              href="/link-health"
-              active={pathname === "/link-health"}
-              isIndex
-            />
-            <SidebarItem
-              emoji="*"
-              label="Smart Collections"
-              href="/smart-collections"
-              active={pathname === "/smart-collections"}
-              isIndex
-            />
-            <SidebarItem
-              emoji="+"
-              label="AI Digest"
-              href="/digest"
-              active={pathname === "/digest"}
-              isIndex
-            />
-            <SidebarItem
-              emoji="^"
-              label="Content Decay"
-              href="/content-decay"
-              active={pathname === "/content-decay"}
               isIndex
             />
             <SidebarItem
@@ -276,13 +241,6 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
               label="RSS Feeds"
               href="/rss-feeds"
               active={pathname === "/rss-feeds"}
-              isIndex
-            />
-            <SidebarItem
-              emoji="&"
-              label="Knowledge Graph"
-              href="/knowledge-graph"
-              active={pathname === "/knowledge-graph"}
               isIndex
             />
           </div>
@@ -570,15 +528,9 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
                   Manage
                 </p>
                 <SidebarItem emoji="#" label="Tags" href="/tags" active={pathname === "/tags"} isIndex />
-                <SidebarItem emoji="=" label="Duplicates" href="/duplicates" active={pathname === "/duplicates"} isIndex />
                 <SidebarItem emoji=">" label="Reading Queue" href="/reading-queue" active={pathname === "/reading-queue"} isIndex />
-                <SidebarItem emoji="~" label="Link Health" href="/link-health" active={pathname === "/link-health"} isIndex />
-                <SidebarItem emoji="*" label="Smart Collections" href="/smart-collections" active={pathname === "/smart-collections"} isIndex />
-                <SidebarItem emoji="+" label="AI Digest" href="/digest" active={pathname === "/digest"} isIndex />
-                <SidebarItem emoji="^" label="Content Decay" href="/content-decay" active={pathname === "/content-decay"} isIndex />
                 <SidebarItem emoji="%" label="Analytics" href="/analytics" active={pathname === "/analytics"} isIndex />
                 <SidebarItem emoji="@" label="RSS Feeds" href="/rss-feeds" active={pathname === "/rss-feeds"} isIndex />
-                <SidebarItem emoji="&" label="Knowledge Graph" href="/knowledge-graph" active={pathname === "/knowledge-graph"} isIndex />
               </div>
             </nav>
 
