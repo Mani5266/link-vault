@@ -24,6 +24,7 @@ export interface Link {
   notes_count: number;
   created_at: string;
   updated_at: string;
+  deleted_at: string | null;
 }
 
 export interface LinkInput {
@@ -80,6 +81,7 @@ export interface LinkFilters {
   sort_dir?: SortDirection;
   page?: number;
   limit?: number;
+  deleted?: boolean;
 }
 
 // ============================================================

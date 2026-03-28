@@ -26,6 +26,9 @@ export function EmptyState({
   const isReadingQueueUnread = context === "reading-queue-unread";
   const isReadingQueueRead = context === "reading-queue-read";
   const isReadingQueue = isReadingQueueUnread || isReadingQueueRead;
+  const isFavorites = context === "favorites";
+  const isRecent = context === "recent";
+  const isTrash = context === "trash";
 
   // Search-specific empty state
   if (searchQuery) {
@@ -59,10 +62,10 @@ export function EmptyState({
 
       {/* Section label */}
       <p className="editorial-label text-paper-faint mb-6">
-        {isAll ? "Your Vault" : isReadingQueue ? "Reading Queue" : context}
+        {isAll ? "Your Vault" : isReadingQueue ? "Reading Queue" : isFavorites ? "Favorites" : isRecent ? "Recent" : isTrash ? "Trash" : context}
       </p>
 
-      {/* Emoji — only for collections */}
+      {/* Emoji — only for collections and special pages */}
       {!isAll && !isReadingQueue && (
         <span className="text-4xl mb-4">{emoji || ""}</span>
       )}
@@ -74,7 +77,13 @@ export function EmptyState({
             ? "Nothing to read"
             : isReadingQueueRead
               ? "No read links yet"
-              : "No links yet"}
+              : isFavorites
+                ? "No favorites yet"
+                : isRecent
+                  ? "No recent links"
+                  : isTrash
+                    ? "Trash is empty"
+                    : "No links yet"}
       </h2>
 
       <p className="text-sm text-paper-dim max-w-sm mb-10 leading-relaxed">
@@ -92,6 +101,21 @@ export function EmptyState({
           <>
             You haven&apos;t marked any links as read yet. Links you finish
             reading will appear here.
+          </>
+        ) : isFavorites ? (
+          <>
+            Pin your most important links to see them here.
+            Use the pin icon on any link card to add it to favorites.
+          </>
+        ) : isRecent ? (
+          <>
+            Links you save will appear here, sorted by most recent.
+            Add your first link to get started.
+          </>
+        ) : isTrash ? (
+          <>
+            Deleted links will appear here for 30 days before being
+            permanently removed.
           </>
         ) : (
           <>
@@ -125,7 +149,7 @@ export function EmptyState({
         </div>
       )}
 
-      {onAddLink && !isReadingQueue && (
+      {onAddLink && !isReadingQueue && !isFavorites && !isTrash && (
         <button
           onClick={onAddLink}
           className="btn-primary"

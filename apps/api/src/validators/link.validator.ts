@@ -60,6 +60,10 @@ export const linkQuerySchema = z.object({
     .transform(Number)
     .pipe(z.number().int().positive().max(LIMITS.MAX_PAGE_SIZE))
     .optional(),
+  deleted: z
+    .string()
+    .transform((val) => val === "true")
+    .optional(),
 });
 
 export const importBookmarksSchema = z.object({

@@ -23,12 +23,20 @@ export class LinkService {
       sort_dir = "desc",
       page = 1,
       limit = LIMITS.DEFAULT_PAGE_SIZE,
+      deleted,
     } = filters;
 
     let query = supabaseAdmin
       .from("links")
       .select("*", { count: "exact" })
       .eq("user_id", userId);
+
+    // By default, exclude soft-deleted links. Show only deleted when deleted=true.
+    if (deleted) {
+      query = query.not("deleted_at", "is", null);
+    } else {
+      query = query.is("deleted_at", null);
+    }
 
     if (collection_id) {
       query = query.eq("collection_id", collection_id);
@@ -129,12 +137,13 @@ export class LinkService {
     const domain = extractDomain(url);
     const faviconUrl = domain ? getFaviconUrl(domain) : null;
 
-    // Check for duplicates using case-insensitive comparison
+    // Check for duplicates using case-insensitive comparison (exclude deleted)
     const { data: existing } = await supabaseAdmin
       .from("links")
       .select("*")
       .eq("user_id", userId)
       .ilike("url", normalizedUrl)
+      .is("deleted_at", null)
       .single();
 
     if (existing) {
@@ -204,14 +213,15 @@ export class LinkService {
   }
 
   /**
-   * Delete a link.
+   * Soft-delete a link (move to trash).
    */
   static async deleteLink(userId: string, linkId: string): Promise<void> {
     const { error } = await supabaseAdmin
       .from("links")
-      .delete()
+      .update({ deleted_at: new Date().toISOString() })
       .eq("id", linkId)
-      .eq("user_id", userId);
+      .eq("user_id", userId)
+      .is("deleted_at", null);
 
     if (error) {
       logger.error({ error }, "Failed to delete link");
@@ -220,18 +230,68 @@ export class LinkService {
   }
 
   /**
-   * Bulk delete links.
+   * Bulk soft-delete links.
    */
   static async bulkDelete(userId: string, ids: string[]): Promise<void> {
     const { error } = await supabaseAdmin
       .from("links")
-      .delete()
+      .update({ deleted_at: new Date().toISOString() })
       .eq("user_id", userId)
       .in("id", ids);
 
     if (error) {
       logger.error({ error }, "Failed to bulk delete links");
       throw new Error("Failed to bulk delete links");
+    }
+  }
+
+  /**
+   * Restore a link from trash.
+   */
+  static async restoreLink(userId: string, linkId: string): Promise<void> {
+    const { error } = await supabaseAdmin
+      .from("links")
+      .update({ deleted_at: null })
+      .eq("id", linkId)
+      .eq("user_id", userId)
+      .not("deleted_at", "is", null);
+
+    if (error) {
+      logger.error({ error }, "Failed to restore link");
+      throw new Error("Failed to restore link");
+    }
+  }
+
+  /**
+   * Permanently delete a link (from trash).
+   */
+  static async permanentDelete(userId: string, linkId: string): Promise<void> {
+    const { error } = await supabaseAdmin
+      .from("links")
+      .delete()
+      .eq("id", linkId)
+      .eq("user_id", userId)
+      .not("deleted_at", "is", null);
+
+    if (error) {
+      logger.error({ error }, "Failed to permanently delete link");
+      throw new Error("Failed to permanently delete link");
+    }
+  }
+
+  /**
+   * Empty trash — permanently delete all soft-deleted links.
+   */
+  static async emptyTrash(userId: string): Promise<void> {
+    const { error } = await supabaseAdmin
+      .from("links")
+      .delete()
+      .eq("user_id", userId)
+      .not("deleted_at", "is", null);
+
+    if (error) {
+      logger.error({ error }, "Failed to empty trash");
+      throw new Error("Failed to empty trash");
     }
   }
 
@@ -269,6 +329,7 @@ export class LinkService {
       .from("links")
       .select("url, title, description, tags, category, domain, is_pinned, created_at, collection:collections(name)")
       .eq("user_id", userId)
+      .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
     if (error) {

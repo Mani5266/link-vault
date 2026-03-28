@@ -30,10 +30,15 @@ router.post(
 // Export must be registered before /:id to avoid route conflict
 router.get("/export", LinksController.exportLinks);
 
+// Trash: empty must be registered before /:id to avoid route conflict
+router.delete("/trash", LinksController.emptyTrash);
+
 router.get("/:id", LinksController.getLinkById);
 router.post("/", validate(createLinkSchema), LinksController.createLink);
 router.patch("/:id", validate(updateLinkSchema), LinksController.updateLink);
 router.delete("/:id", LinksController.deleteLink);
+router.post("/:id/restore", LinksController.restoreLink);
+router.delete("/:id/permanent", LinksController.permanentDelete);
 router.post(
   "/bulk-delete",
   validate(bulkDeleteSchema),

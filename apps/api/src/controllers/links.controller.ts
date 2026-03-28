@@ -291,4 +291,61 @@ export class LinksController {
       ApiResponse.error(res, "Failed to import bookmarks");
     }
   }
+
+  /**
+   * POST /api/v1/links/:id/restore
+   * Restore a soft-deleted link from trash.
+   */
+  static async restoreLink(req: Request, res: Response) {
+    try {
+      const userId = (req as any).user.id;
+      const id = getValidUUIDParam(req.params.id);
+      if (!id) {
+        ApiResponse.badRequest(res, "Invalid link ID");
+        return;
+      }
+
+      await LinkService.restoreLink(userId, id);
+      ApiResponse.success(res, null, "Link restored");
+    } catch (error: any) {
+      logger.error({ error }, "Failed to restore link");
+      ApiResponse.error(res, "Failed to restore link");
+    }
+  }
+
+  /**
+   * DELETE /api/v1/links/:id/permanent
+   * Permanently delete a link from trash.
+   */
+  static async permanentDelete(req: Request, res: Response) {
+    try {
+      const userId = (req as any).user.id;
+      const id = getValidUUIDParam(req.params.id);
+      if (!id) {
+        ApiResponse.badRequest(res, "Invalid link ID");
+        return;
+      }
+
+      await LinkService.permanentDelete(userId, id);
+      ApiResponse.success(res, null, "Link permanently deleted");
+    } catch (error: any) {
+      logger.error({ error }, "Failed to permanently delete link");
+      ApiResponse.error(res, "Failed to permanently delete link");
+    }
+  }
+
+  /**
+   * DELETE /api/v1/links/trash
+   * Empty trash — permanently delete all soft-deleted links.
+   */
+  static async emptyTrash(req: Request, res: Response) {
+    try {
+      const userId = (req as any).user.id;
+      await LinkService.emptyTrash(userId);
+      ApiResponse.success(res, null, "Trash emptied");
+    } catch (error: any) {
+      logger.error({ error }, "Failed to empty trash");
+      ApiResponse.error(res, "Failed to empty trash");
+    }
+  }
 }
