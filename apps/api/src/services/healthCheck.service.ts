@@ -56,9 +56,9 @@ export class HealthCheckService {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-      let response: Response;
+      let res: Awaited<ReturnType<typeof fetch>>;
       try {
-        response = await fetch(link.url, {
+        res = await fetch(link.url, {
           method: "HEAD",
           redirect: "manual",
           signal: controller.signal,
@@ -68,8 +68,8 @@ export class HealthCheckService {
         });
 
         // Some servers reject HEAD — retry with GET
-        if (response.status === 405 || response.status === 501) {
-          response = await fetch(link.url, {
+        if (res.status === 405 || res.status === 501) {
+          res = await fetch(link.url, {
             method: "GET",
             redirect: "manual",
             signal: controller.signal,
@@ -83,7 +83,7 @@ export class HealthCheckService {
       }
 
       const elapsed = Date.now() - start;
-      const status = HealthCheckService.classifyStatus(response.status);
+      const status = HealthCheckService.classifyStatus(res.status);
 
       return {
         link_id: link.id,
@@ -92,7 +92,7 @@ export class HealthCheckService {
         domain: link.domain,
         favicon_url: link.favicon_url,
         status,
-        http_code: response.status,
+        http_code: res.status,
         error: null,
         response_time_ms: elapsed,
       };
