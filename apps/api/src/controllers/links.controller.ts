@@ -73,9 +73,13 @@ export class LinksController {
       const queue = getAIProcessingQueue();
       if (queue) {
         // Background processing — set status to pending and return immediately
-        await LinkService.updateLink(userId, link.id, {
-          processing_status: "pending" as any,
-        });
+        try {
+          await LinkService.updateLink(userId, link.id, {
+            processing_status: "pending" as any,
+          });
+        } catch (statusErr) {
+          logger.warn({ statusErr }, "Failed to set processing_status, continuing without it");
+        }
 
         await queue.add("process-link", {
           linkId: link.id,
@@ -95,19 +99,23 @@ export class LinksController {
         try {
           const aiResult = await AIService.summarizeUrl(url, undefined);
 
-          const updatedLink = await LinkService.updateLink(userId, link.id, {
+          const updateData: Record<string, unknown> = {
             title: aiResult.title,
             description: aiResult.description,
             tags: aiResult.tags,
-            category: aiResult.category as any,
+            category: aiResult.category,
             emoji: aiResult.emoji,
             ai_processed: true,
-            processing_status: "complete" as any,
-          });
+            processing_status: "complete",
+          };
+
+          const updatedLink = await LinkService.updateLink(userId, link.id, updateData as any);
 
           ApiResponse.created(res, updatedLink, "Link saved and analyzed by AI");
         } catch (aiError) {
-          logger.warn({ aiError }, "AI summarization failed, returning basic link");
+          logger.warn({ aiError }, "AI processing failed, returning basic link");
+
+          // Return the saved link even if AI failed
           ApiResponse.created(
             res,
             link,
