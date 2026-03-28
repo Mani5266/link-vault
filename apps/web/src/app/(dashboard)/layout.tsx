@@ -694,7 +694,7 @@ function SidebarItem({
   }, [menuOpen]);
 
   return (
-    <div className="relative group mb-px">
+    <div className={`relative group mb-px ${menuOpen ? "z-30" : ""}`}>
       <div className="flex items-center">
         {/* Expand/collapse chevron for parent collections with children */}
         {hasChildren && onToggleExpand ? (
