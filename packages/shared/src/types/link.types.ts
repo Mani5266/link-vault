@@ -2,6 +2,8 @@
 // Link Types — Core data model for saved links
 // ============================================================
 
+export type ProcessingStatus = "pending" | "processing" | "complete" | "failed";
+
 export interface Link {
   id: string;
   user_id: string;
@@ -16,6 +18,7 @@ export interface Link {
   favicon_url: string | null;
   is_pinned: boolean;
   ai_processed: boolean;
+  processing_status: ProcessingStatus | null;
   reading_status: ReadingStatus | null;
   read_at: string | null;
   created_at: string;

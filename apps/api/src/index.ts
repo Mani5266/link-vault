@@ -12,6 +12,18 @@ import { generalRateLimiter } from "./middleware/rateLimit.middleware";
 import { errorHandler } from "./middleware/errorHandler.middleware";
 import routes from "./routes";
 import { logger } from "./utils/logger";
+import { getRedisConnection, closeRedisConnection } from "./config/redis";
+import { closeAllQueues } from "./queues";
+import {
+  startAIWorker,
+  stopAIWorker,
+  startDigestWorker,
+  stopDigestWorker,
+  scheduleWeeklyDigests,
+  startDecayWorker,
+  stopDecayWorker,
+  scheduleDailyDecayScans,
+} from "./workers";
 
 const app = express();
 
@@ -61,12 +73,59 @@ Sentry.setupExpressErrorHandler(app);
 app.use(errorHandler);
 
 // ============================================================
-// Start Server
+// Start Server + Background Workers
 // ============================================================
-app.listen(env.PORT, () => {
+const server = app.listen(env.PORT, async () => {
   logger.info(`LinkVault API running on port ${env.PORT}`);
   logger.info(`Environment: ${env.NODE_ENV}`);
   logger.info(`CORS origin: ${env.CORS_ORIGIN}`);
+
+  // Start background workers if Redis is available
+  const redis = getRedisConnection();
+  if (redis) {
+    startAIWorker();
+    startDigestWorker();
+    startDecayWorker();
+
+    // Register scheduled jobs
+    await scheduleWeeklyDigests();
+    await scheduleDailyDecayScans();
+
+    logger.info("Background workers started");
+  } else {
+    logger.info("Running without background workers (no Redis)");
+  }
 });
+
+// ============================================================
+// Graceful Shutdown
+// ============================================================
+async function gracefulShutdown(signal: string) {
+  logger.info(`${signal} received — shutting down gracefully`);
+
+  server.close(async () => {
+    try {
+      await stopAIWorker();
+      await stopDigestWorker();
+      await stopDecayWorker();
+      await closeAllQueues();
+      await closeRedisConnection();
+      logger.info("Shutdown complete");
+      process.exit(0);
+    } catch (err) {
+      logger.error({ err }, "Error during shutdown");
+      process.exit(1);
+    }
+  });
+
+  // Force exit after 10 seconds
+  setTimeout(() => {
+    logger.error("Forced shutdown after timeout");
+    process.exit(1);
+  }, 10000);
+}
+
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
 export default app;

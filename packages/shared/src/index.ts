@@ -13,6 +13,7 @@ export type {
   SortDirection,
   LinkFilters,
   ReadingStatus,
+  ProcessingStatus,
   BookmarkImportItem,
   BookmarkImportResult,
   ExportFormat,
@@ -46,6 +47,8 @@ export type {
   AISemanticSearchResult,
   AIDigestRequest,
   AIDigestResponse,
+  DigestRecord,
+  ContentDecayScore,
 } from "./types/ai.types";
 
 export type { UserProfile, AuthState } from "./types/user.types";

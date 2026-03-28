@@ -105,6 +105,7 @@ const config: Config = {
         "pulse-glow": "pulseGlow 2.5s ease-in-out infinite",
         "spin-slow": "spin 3s linear infinite",
         "float": "float 3s ease-in-out infinite",
+        "processing-bar": "processingBar 1.5s ease-in-out infinite",
       },
       keyframes: {
         fadeIn: {
@@ -159,6 +160,11 @@ const config: Config = {
         float: {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-4px)" },
+        },
+        processingBar: {
+          "0%": { transform: "translateX(-100%)", width: "40%" },
+          "50%": { transform: "translateX(100%)", width: "60%" },
+          "100%": { transform: "translateX(300%)", width: "40%" },
         },
       },
       transitionTimingFunction: {

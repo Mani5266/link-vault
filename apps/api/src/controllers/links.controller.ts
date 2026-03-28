@@ -6,6 +6,7 @@ import { parseBookmarksHtml } from "../utils/bookmarkParser";
 import { logger } from "../utils/logger";
 import type { LinkFilters } from "@linkvault/shared";
 import { LIMITS } from "@linkvault/shared";
+import { getAIProcessingQueue } from "../queues";
 
 function getParam(param: string | string[]): string {
   return Array.isArray(param) ? param[0] : param;
@@ -57,7 +58,8 @@ export class LinksController {
 
   /**
    * POST /api/v1/links
-   * Creates a link and triggers AI summarization.
+   * Creates a link and enqueues AI processing (background job).
+   * Falls back to inline processing if Redis/BullMQ is unavailable.
    */
   static async createLink(req: Request, res: Response) {
     try {
@@ -67,30 +69,51 @@ export class LinksController {
       // Create the link first (fast)
       const link = await LinkService.createLink(userId, url, collection_id);
 
-      // Trigger AI summarization (may take a few seconds)
-      // We do this inline for MVP — could be moved to a queue later
-      try {
-        const aiResult = await AIService.summarizeUrl(url, undefined);
-
-        // Update the link with AI data
-        const updatedLink = await LinkService.updateLink(userId, link.id, {
-          title: aiResult.title,
-          description: aiResult.description,
-          tags: aiResult.tags,
-          category: aiResult.category as any,
-          emoji: aiResult.emoji,
-          ai_processed: true,
+      // Try to enqueue background AI processing
+      const queue = getAIProcessingQueue();
+      if (queue) {
+        // Background processing — set status to pending and return immediately
+        await LinkService.updateLink(userId, link.id, {
+          processing_status: "pending" as any,
         });
 
-        ApiResponse.created(res, updatedLink, "Link saved and analyzed by AI");
-      } catch (aiError) {
-        // AI failed, but link is saved — return the basic link
-        logger.warn({ aiError }, "AI summarization failed, returning basic link");
+        await queue.add("process-link", {
+          linkId: link.id,
+          userId,
+          url,
+          collectionId: collection_id || null,
+        });
+
+        const updatedLink = await LinkService.getLinkById(userId, link.id);
         ApiResponse.created(
           res,
-          link,
-          "Link saved (AI analysis unavailable)"
+          updatedLink || link,
+          "Link saved — AI analysis in progress"
         );
+      } else {
+        // Fallback: inline processing (Redis unavailable)
+        try {
+          const aiResult = await AIService.summarizeUrl(url, undefined);
+
+          const updatedLink = await LinkService.updateLink(userId, link.id, {
+            title: aiResult.title,
+            description: aiResult.description,
+            tags: aiResult.tags,
+            category: aiResult.category as any,
+            emoji: aiResult.emoji,
+            ai_processed: true,
+            processing_status: "complete" as any,
+          });
+
+          ApiResponse.created(res, updatedLink, "Link saved and analyzed by AI");
+        } catch (aiError) {
+          logger.warn({ aiError }, "AI summarization failed, returning basic link");
+          ApiResponse.created(
+            res,
+            link,
+            "Link saved (AI analysis unavailable)"
+          );
+        }
       }
     } catch (error: any) {
       if (error.statusCode === 409) {

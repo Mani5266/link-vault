@@ -16,6 +16,7 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().default("http://localhost:3000"),
   RATE_LIMIT_WINDOW_MS: z.string().default("60000").transform(Number),
   RATE_LIMIT_MAX_REQUESTS: z.string().default("10").transform(Number),
+  REDIS_URL: z.string().optional(),
   SENTRY_DSN: z.string().optional(),
 });
 

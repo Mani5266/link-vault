@@ -468,6 +468,21 @@ export function useLinks(options: UseLinksOptions = {}) {
     setError,
   ]);
 
+  // ---- Auto-poll when links are processing ----
+  const hasProcessing = links.some(
+    (l) => l.processing_status === "pending" || l.processing_status === "processing"
+  );
+
+  useEffect(() => {
+    if (!hasProcessing) return;
+
+    const interval = setInterval(() => {
+      fetchLinks();
+    }, 3000); // Poll every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [hasProcessing, fetchLinks]);
+
   return {
     links,
     isLoading,

@@ -9,6 +9,8 @@ import linkHealthRoutes from "./linkHealth.routes";
 import smartCollectionsRoutes from "./smartCollections.routes";
 import analyticsRoutes from "./analytics.routes";
 import healthRoutes from "./health.routes";
+import digestRoutes from "./digest.routes";
+import decayRoutes from "./decay.routes";
 
 // ============================================================
 // Versioned routes — mounted at /api/v1
@@ -25,6 +27,8 @@ v1Router.use("/duplicates", duplicatesRoutes);
 v1Router.use("/link-health", linkHealthRoutes);
 v1Router.use("/smart-collections", smartCollectionsRoutes);
 v1Router.use("/analytics", analyticsRoutes);
+v1Router.use("/digests", digestRoutes);
+v1Router.use("/decay", decayRoutes);
 
 // ============================================================
 // Unversioned routes — mounted at /api

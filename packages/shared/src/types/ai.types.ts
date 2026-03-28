@@ -74,3 +74,47 @@ export interface AIProcessingState {
   status: "idle" | "processing" | "success" | "error" | "fallback";
   error?: string;
 }
+
+// ============================================================
+// Digest History Types
+// ============================================================
+
+export interface DigestRecord {
+  id: string;
+  user_id: string;
+  summary: string;
+  highlights: Array<{ title: string; url: string; reason: string }>;
+  themes: string[];
+  stats: {
+    total_links: number;
+    categories: Record<string, number>;
+    period_start: string;
+    period_end: string;
+  };
+  period_days: number;
+  period_start: string;
+  period_end: string;
+  created_at: string;
+}
+
+// ============================================================
+// Content Decay Types
+// ============================================================
+
+export interface ContentDecayScore {
+  link_id: string;
+  user_id: string;
+  decay_score: number;
+  age_days: number;
+  decay_rate: string;
+  scanned_at: string;
+  /** Joined from links table for display */
+  link?: {
+    title: string | null;
+    url: string;
+    domain: string | null;
+    category: string | null;
+    created_at: string;
+    reading_status: string | null;
+  };
+}

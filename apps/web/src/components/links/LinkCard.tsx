@@ -260,7 +260,10 @@ function GridCard({
             {displayEmoji}
           </span>
           <span className="mono-domain truncate">{link.domain}</span>
-          <AIBadge processed={link.ai_processed} />
+          <AIBadge
+            processed={link.ai_processed}
+            isProcessing={link.processing_status === "pending" || link.processing_status === "processing"}
+          />
         </div>
 
         {/* Context menu */}
@@ -289,6 +292,15 @@ function GridCard({
           )}
         </div>
       </div>
+
+      {/* Processing indicator bar */}
+      {(link.processing_status === "pending" || link.processing_status === "processing") && (
+        <div className="px-4 pb-2">
+          <div className="h-0.5 bg-ink-300 overflow-hidden" style={{ borderRadius: "1px" }}>
+            <div className="h-full bg-gold animate-processing-bar" />
+          </div>
+        </div>
+      )}
 
       {/* Title */}
       <a
@@ -459,7 +471,10 @@ function ListRow({
           )}
           {/* Tags row */}
           <div className="flex items-center gap-1.5 mt-1">
-            <AIBadge processed={link.ai_processed} />
+            <AIBadge
+              processed={link.ai_processed}
+              isProcessing={link.processing_status === "pending" || link.processing_status === "processing"}
+            />
             {categoryMeta && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 text-micro font-medium uppercase tracking-editorial bg-ink-200 text-paper-dim tag-pill"
               >
