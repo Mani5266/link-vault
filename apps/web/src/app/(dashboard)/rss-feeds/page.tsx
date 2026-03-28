@@ -184,7 +184,7 @@ export default function RssFeedsPage() {
             type="url"
             value={addUrl}
             onChange={(e) => setAddUrl(e.target.value)}
-            placeholder="https://example.com/feed.xml"
+            placeholder="https://example.com or https://example.com/feed.xml"
             className="flex-1 bg-ink-200 border border-ink-300 px-3 py-2 text-sm text-paper placeholder:text-paper-faint font-body focus:outline-none focus:border-accent/50 transition-colors"
             style={{ borderRadius: "var(--radius-sm)" }}
             onKeyDown={(e) => {
@@ -218,6 +218,9 @@ export default function RssFeedsPage() {
             {adding ? "Adding..." : "Add Feed"}
           </button>
         </div>
+        <p className="text-xs text-paper-faint mt-2 font-body">
+          Paste a feed URL or any website URL — we'll auto-discover the RSS feed.
+        </p>
       </div>
 
       {/* Feeds List */}

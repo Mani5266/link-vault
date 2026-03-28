@@ -63,26 +63,83 @@ export class RssFeedController {
 
       // Parse the feed to get metadata
       let feedMeta: { title?: string; description?: string; link?: string } = {};
+      let resolvedFeedUrl = feed_url.trim();
       try {
         const Parser = (await import("rss-parser")).default;
         const parser = new Parser({ timeout: 10000 });
-        const feed = await parser.parseURL(feed_url.trim());
+        const feed = await parser.parseURL(resolvedFeedUrl);
         feedMeta = {
           title: feed.title || undefined,
           description: feed.description || undefined,
           link: feed.link || undefined,
         };
       } catch (parseErr) {
-        logger.warn({ parseErr, feed_url }, "Failed to parse RSS feed");
-        ApiResponse.badRequest(res, "Could not parse the RSS feed. Please check the URL.");
-        return;
+        // Auto-discovery: try to find RSS feed link in the page HTML
+        logger.info({ feed_url }, "Direct parse failed, attempting RSS auto-discovery");
+        let discovered = false;
+        try {
+          const abortController = new AbortController();
+          const timeout = setTimeout(() => abortController.abort(), 10000);
+          const pageRes = await fetch(resolvedFeedUrl, {
+            signal: abortController.signal,
+            headers: { "User-Agent": "LinkVault/1.0 RSS Discovery" },
+          });
+          clearTimeout(timeout);
+          const html = await pageRes.text();
+
+          // Look for <link rel="alternate" type="application/rss+xml" href="...">
+          // Also check for atom+xml feeds
+          const feedLinkRegex = /<link[^>]+type=["']application\/(?:rss|atom)\+xml["'][^>]*>/gi;
+          const matches = html.match(feedLinkRegex);
+          if (matches && matches.length > 0) {
+            const hrefMatch = matches[0].match(/href=["']([^"']+)["']/i);
+            if (hrefMatch && hrefMatch[1]) {
+              let discoveredUrl = hrefMatch[1];
+              // Resolve relative URLs
+              if (discoveredUrl.startsWith("/")) {
+                const base = new URL(resolvedFeedUrl);
+                discoveredUrl = `${base.origin}${discoveredUrl}`;
+              } else if (!discoveredUrl.startsWith("http")) {
+                const base = new URL(resolvedFeedUrl);
+                discoveredUrl = `${base.origin}/${discoveredUrl}`;
+              }
+
+              // Validate discovered URL for SSRF
+              await validateUrlForFetch(discoveredUrl);
+
+              // Try parsing the discovered feed URL
+              const Parser = (await import("rss-parser")).default;
+              const parser = new Parser({ timeout: 10000 });
+              const feed = await parser.parseURL(discoveredUrl);
+              feedMeta = {
+                title: feed.title || undefined,
+                description: feed.description || undefined,
+                link: feed.link || undefined,
+              };
+              resolvedFeedUrl = discoveredUrl;
+              discovered = true;
+              logger.info({ resolvedFeedUrl }, "RSS feed auto-discovered");
+            }
+          }
+        } catch (discoveryErr) {
+          logger.warn({ discoveryErr, feed_url }, "RSS auto-discovery failed");
+        }
+
+        if (!discovered) {
+          logger.warn({ parseErr, feed_url }, "Failed to parse RSS feed");
+          ApiResponse.badRequest(
+            res,
+            "Could not find an RSS feed at this URL. Try providing a direct feed URL (e.g. /feed, /rss, /atom.xml)."
+          );
+          return;
+        }
       }
 
       const { data, error } = await supabaseAdmin
         .from("rss_feeds")
         .insert({
           user_id: userId,
-          feed_url: feed_url.trim(),
+          feed_url: resolvedFeedUrl,
           title: feedMeta.title || null,
           description: feedMeta.description || null,
           site_url: feedMeta.link || null,
