@@ -16,7 +16,7 @@ import type { Link, ApiResponse } from "@linkvault/shared";
 // Uses modal-backdrop/panel/header/title classes + editorial inputs
 // ============================================================
 
-type AIStep = "idle" | "saving" | "analyzing" | "done" | "error";
+type AIStep = "idle" | "saving" | "analyzing" | "done" | "error" | "duplicate";
 type ErrorKind = "save" | "ai";
 
 export function AddLinkModal() {
@@ -116,11 +116,17 @@ export function AddLinkModal() {
       }
     } catch (err) {
       clearTimeout(analyzeTimer);
-      const msg = err instanceof ApiError ? err.message : "Failed to save link. Please try again.";
-      setError(msg);
-      setErrorKind("save");
-      setAiStep("error");
-      toast.error(msg);
+      if (err instanceof ApiError && err.statusCode === 409) {
+        setError(null);
+        setAiStep("duplicate");
+        toast.info("This link already exists in your vault");
+      } else {
+        const msg = err instanceof ApiError ? err.message : "Failed to save link. Please try again.";
+        setError(msg);
+        setErrorKind("save");
+        setAiStep("error");
+        toast.error(msg);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -262,9 +268,9 @@ export function AddLinkModal() {
               onClick={() => setAddLinkModalOpen(false)}
               className="btn-ghost"
             >
-              {aiStep === "done" ? "Done" : "Cancel"}
+              {aiStep === "done" || aiStep === "duplicate" ? "Done" : "Cancel"}
             </button>
-            {aiStep !== "done" && (
+            {aiStep !== "done" && aiStep !== "duplicate" && (
               <button
                 type="submit"
                 disabled={isSubmitting || !url.trim()}
@@ -340,6 +346,22 @@ function AIStatusIndicator({
           {errorKind === "ai"
             ? "AI analysis failed. The link was saved with basic metadata."
             : "Failed to save link. Please check the URL and try again."}
+        </span>
+      </div>
+    );
+  }
+
+  if (step === "duplicate") {
+    return (
+      <div
+        className="flex items-center gap-2 px-3 py-2.5 bg-gold-subtle border border-gold/10"
+        style={{ borderRadius: "var(--radius-sm)" }}
+      >
+        <svg className="w-3.5 h-3.5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span className="text-xs text-gold font-body">
+          This link already exists in your vault.
         </span>
       </div>
     );
