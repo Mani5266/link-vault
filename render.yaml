@@ -3,7 +3,7 @@ services:
     name: linkvault-api
     runtime: node
     plan: free
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @linkvault/shared build && pnpm --filter @linkvault/api build
+    buildCommand: npm i -g pnpm && pnpm install --frozen-lockfile && pnpm --filter @linkvault/shared build && pnpm --filter @linkvault/api build
     startCommand: node apps/api/dist/index.js
     envVars:
       - key: NODE_ENV
