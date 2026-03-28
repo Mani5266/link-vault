@@ -19,7 +19,7 @@ export class DecayController {
       const from = (page - 1) * limit;
       const to = from + limit - 1;
 
-      let query = supabaseAdmin
+      const query = supabaseAdmin
         .from("content_decay_scores")
         .select(
           "*, link:links(title, url, domain, category, created_at, reading_status, favicon_url, emoji)",
