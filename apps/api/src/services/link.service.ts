@@ -142,16 +142,33 @@ export class LinkService {
     const domain = extractDomain(url);
     const faviconUrl = domain ? getFaviconUrl(domain) : null;
 
-    // Check for duplicates using case-insensitive comparison (exclude deleted)
+    // Check for duplicates (including soft-deleted links in trash)
     const { data: existing } = await supabaseAdmin
       .from("links")
       .select("*")
       .eq("user_id", userId)
       .ilike("url", normalizedUrl)
-      .is("deleted_at", null)
       .single();
 
     if (existing) {
+      // If the link is in trash, restore it instead of creating a duplicate
+      if (existing.deleted_at) {
+        const { data: restored } = await supabaseAdmin
+          .from("links")
+          .update({
+            deleted_at: null,
+            url: normalizedUrl,
+            collection_id: collectionId || existing.collection_id,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existing.id)
+          .eq("user_id", userId)
+          .select()
+          .single();
+
+        if (restored) return restored;
+      }
+
       // If the stored URL differs in casing, repair it silently
       if (existing.url !== normalizedUrl) {
         const { data: repaired } = await supabaseAdmin
@@ -186,6 +203,12 @@ export class LinkService {
       .single();
 
     if (error) {
+      // Handle race condition: unique constraint violation = duplicate
+      if ((error as any).code === "23505") {
+        const dupError: any = new Error("This link has already been saved");
+        dupError.statusCode = 409;
+        throw dupError;
+      }
       logger.error({ error }, "Failed to create link");
       throw new Error("Failed to create link");
     }
