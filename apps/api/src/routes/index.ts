@@ -11,6 +11,9 @@ import analyticsRoutes from "./analytics.routes";
 import healthRoutes from "./health.routes";
 import digestRoutes from "./digest.routes";
 import decayRoutes from "./decay.routes";
+import notesRoutes from "./notes.routes";
+import rssFeedRoutes from "./rssFeed.routes";
+import graphRoutes from "./graph.routes";
 
 // ============================================================
 // Versioned routes — mounted at /api/v1
@@ -29,6 +32,9 @@ v1Router.use("/smart-collections", smartCollectionsRoutes);
 v1Router.use("/analytics", analyticsRoutes);
 v1Router.use("/digests", digestRoutes);
 v1Router.use("/decay", decayRoutes);
+v1Router.use("/links/:linkId/notes", notesRoutes);
+v1Router.use("/rss-feeds", rssFeedRoutes);
+v1Router.use("/graph", graphRoutes);
 
 // ============================================================
 // Unversioned routes — mounted at /api

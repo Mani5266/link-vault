@@ -29,6 +29,14 @@ export type {
   SmartCollection,
   SmartCollectionInput,
   SmartCollectionUpdate,
+  LinkNote,
+  LinkNoteInput,
+  RssFeed,
+  RssFeedInput,
+  RssFeedItem,
+  GraphNode,
+  GraphEdge,
+  KnowledgeGraph,
 } from "./types/link.types";
 
 export type {

@@ -25,6 +25,7 @@ interface LinkCardProps {
   onReAnalyze?: (link: Link) => void;
   onToggleSelect?: (link: Link) => void;
   onToggleReadingStatus?: (link: Link, status: ReadingStatus | null) => void;
+  onViewNotes?: (link: Link) => void;
 }
 
 export const LinkCard = memo(function LinkCard({
@@ -41,6 +42,7 @@ export const LinkCard = memo(function LinkCard({
   onReAnalyze,
   onToggleSelect,
   onToggleReadingStatus,
+  onViewNotes,
 }: LinkCardProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -101,6 +103,7 @@ export const LinkCard = memo(function LinkCard({
       onReAnalyze={onReAnalyze}
       onToggleSelect={onToggleSelect}
       onToggleReadingStatus={onToggleReadingStatus}
+      onViewNotes={onViewNotes}
     />;
   }
 
@@ -130,6 +133,7 @@ export const LinkCard = memo(function LinkCard({
       onReAnalyze={onReAnalyze}
       onToggleSelect={onToggleSelect}
       onToggleReadingStatus={onToggleReadingStatus}
+      onViewNotes={onViewNotes}
     />
   );
 });
@@ -163,6 +167,7 @@ interface VariantProps {
   onReAnalyze?: (link: Link) => void;
   onToggleSelect?: (link: Link) => void;
   onToggleReadingStatus?: (link: Link, status: ReadingStatus | null) => void;
+  onViewNotes?: (link: Link) => void;
 }
 
 // ============================================================
@@ -194,6 +199,7 @@ function GridCard({
   onReAnalyze,
   onToggleSelect,
   onToggleReadingStatus,
+  onViewNotes,
 }: VariantProps) {
   return (
     <article
@@ -288,6 +294,7 @@ function GridCard({
               onMoveToCollection={onMoveToCollection}
               onReAnalyze={onReAnalyze}
               onToggleReadingStatus={onToggleReadingStatus}
+              onViewNotes={onViewNotes}
             />
           )}
         </div>
@@ -352,9 +359,23 @@ function GridCard({
             </span>
           )}
         </div>
-        <span className="text-micro text-paper-faint shrink-0 tabular-nums">
-          {formatDate(link.created_at)}
-        </span>
+        <div className="flex items-center gap-2">
+          {link.notes_count > 0 && (
+            <button
+              onClick={() => onViewNotes?.(link)}
+              className="flex items-center gap-1 text-micro text-paper-faint hover:text-accent transition-colors"
+              title={`${link.notes_count} note${link.notes_count > 1 ? "s" : ""}`}
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              {link.notes_count}
+            </button>
+          )}
+          <span className="text-micro text-paper-faint shrink-0 tabular-nums">
+            {formatDate(link.created_at)}
+          </span>
+        </div>
       </div>
     </article>
   );
@@ -389,6 +410,7 @@ function ListRow({
   onReAnalyze,
   onToggleSelect,
   onToggleReadingStatus,
+  onViewNotes,
 }: VariantProps) {
   return (
     <article
@@ -524,6 +546,7 @@ function ListRow({
               onMoveToCollection={onMoveToCollection}
               onReAnalyze={onReAnalyze}
               onToggleReadingStatus={onToggleReadingStatus}
+              onViewNotes={onViewNotes}
             />
           )}
         </div>
@@ -607,6 +630,7 @@ function ContextMenu({
   onMoveToCollection,
   onReAnalyze,
   onToggleReadingStatus,
+  onViewNotes,
 }: {
   link: Link;
   copied: boolean;
@@ -618,6 +642,7 @@ function ContextMenu({
   onMoveToCollection?: (link: Link) => void;
   onReAnalyze?: (link: Link) => void;
   onToggleReadingStatus?: (link: Link, status: ReadingStatus | null) => void;
+  onViewNotes?: (link: Link) => void;
 }) {
   function action(fn?: (link: Link) => void) {
     return () => {
@@ -658,6 +683,9 @@ function ContextMenu({
       )}
       <MenuButton onClick={action(onMoveToCollection)}>
         Move to collection
+      </MenuButton>
+      <MenuButton onClick={action(onViewNotes)}>
+        Notes{link.notes_count > 0 ? ` (${link.notes_count})` : ""}
       </MenuButton>
       <MenuButton onClick={action(onEdit)}>Edit details</MenuButton>
       <div className="h-px bg-ink-300 mx-2 my-1" />

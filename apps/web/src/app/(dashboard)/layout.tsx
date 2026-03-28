@@ -271,6 +271,20 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
               active={pathname === "/analytics"}
               isIndex
             />
+            <SidebarItem
+              emoji="@"
+              label="RSS Feeds"
+              href="/rss-feeds"
+              active={pathname === "/rss-feeds"}
+              isIndex
+            />
+            <SidebarItem
+              emoji="&"
+              label="Knowledge Graph"
+              href="/knowledge-graph"
+              active={pathname === "/knowledge-graph"}
+              isIndex
+            />
           </div>
         </nav>
 
@@ -563,6 +577,8 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
                 <SidebarItem emoji="+" label="AI Digest" href="/digest" active={pathname === "/digest"} isIndex />
                 <SidebarItem emoji="^" label="Content Decay" href="/content-decay" active={pathname === "/content-decay"} isIndex />
                 <SidebarItem emoji="%" label="Analytics" href="/analytics" active={pathname === "/analytics"} isIndex />
+                <SidebarItem emoji="@" label="RSS Feeds" href="/rss-feeds" active={pathname === "/rss-feeds"} isIndex />
+                <SidebarItem emoji="&" label="Knowledge Graph" href="/knowledge-graph" active={pathname === "/knowledge-graph"} isIndex />
               </div>
             </nav>
 

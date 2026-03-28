@@ -10,6 +10,7 @@ import { LinkGrid } from "@/components/links/LinkGrid";
 import { SortFilterBar } from "@/components/links/SortFilterBar";
 import { BulkActionBar } from "@/components/links/BulkActionBar";
 import { BulkMoveModal } from "@/components/links/BulkMoveModal";
+import { NotesPanel } from "@/components/links/NotesPanel";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import type { Link, LinkSortField, SortDirection, LinkCategory } from "@linkvault/shared";
 
@@ -32,6 +33,7 @@ export default function DashboardPage() {
   const { toggleSelection } = useLinkStore();
 
   const [isBulkMoveOpen, setIsBulkMoveOpen] = useState(false);
+  const [notesLink, setNotesLink] = useState<Link | null>(null);
 
   // Sort pinned first to match LinkGrid's display order
   const sortedLinks = useMemo(() => {
@@ -142,6 +144,7 @@ export default function DashboardPage() {
         onReAnalyze={reAnalyze}
         onToggleSelect={(link) => toggleSelection(link.id)}
         onToggleReadingStatus={toggleReadingStatus}
+        onViewNotes={setNotesLink}
       />
       </ErrorBoundary>
 
@@ -151,6 +154,14 @@ export default function DashboardPage() {
         selectedCount={selectedIds.length}
         onMove={handleBulkMove}
         onClose={() => setIsBulkMoveOpen(false)}
+      />
+
+      {/* Notes Panel */}
+      <NotesPanel
+        linkId={notesLink?.id || ""}
+        linkTitle={notesLink?.title || notesLink?.url || ""}
+        isOpen={!!notesLink}
+        onClose={() => setNotesLink(null)}
       />
     </div>
   );

@@ -21,6 +21,7 @@ export interface Link {
   processing_status: ProcessingStatus | null;
   reading_status: ReadingStatus | null;
   read_at: string | null;
+  notes_count: number;
   created_at: string;
   updated_at: string;
 }
@@ -216,4 +217,84 @@ export interface SmartCollectionUpdate {
   emoji?: string;
   rules?: SmartCollectionRule[];
   match_mode?: "all" | "any";
+}
+
+// ============================================================
+// Link Notes Types
+// ============================================================
+
+export interface LinkNote {
+  id: string;
+  link_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface LinkNoteInput {
+  content: string;
+}
+
+// ============================================================
+// RSS Feed Types
+// ============================================================
+
+export interface RssFeed {
+  id: string;
+  user_id: string;
+  feed_url: string;
+  title: string | null;
+  description: string | null;
+  site_url: string | null;
+  collection_id: string | null;
+  is_active: boolean;
+  check_interval_minutes: number;
+  last_checked_at: string | null;
+  last_error: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RssFeedInput {
+  feed_url: string;
+  collection_id?: string | null;
+}
+
+export interface RssFeedItem {
+  id: string;
+  feed_id: string;
+  user_id: string;
+  guid: string;
+  url: string;
+  title: string | null;
+  description: string | null;
+  published_at: string | null;
+  link_id: string | null;
+  is_saved: boolean;
+  created_at: string;
+}
+
+// ============================================================
+// Knowledge Graph Types
+// ============================================================
+
+export interface GraphNode {
+  id: string;
+  label: string;
+  type: "link" | "tag" | "category" | "domain";
+  size?: number;
+  color?: string;
+  url?: string;
+}
+
+export interface GraphEdge {
+  source: string;
+  target: string;
+  weight: number;
+}
+
+export interface KnowledgeGraph {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
 }

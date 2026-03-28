@@ -43,6 +43,7 @@ interface LinkGridProps {
   onReAnalyze?: (link: Link) => void;
   onToggleSelect?: (link: Link) => void;
   onToggleReadingStatus?: (link: Link, status: ReadingStatus | null) => void;
+  onViewNotes?: (link: Link) => void;
 }
 
 export function LinkGrid({
@@ -70,6 +71,7 @@ export function LinkGrid({
   onReAnalyze,
   onToggleSelect,
   onToggleReadingStatus,
+  onViewNotes,
 }: LinkGridProps) {
   // Auto-load-more sentinel — triggers loadMore when scrolled into view
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -156,6 +158,7 @@ export function LinkGrid({
               onReAnalyze={onReAnalyze}
               onToggleSelect={onToggleSelect}
               onToggleReadingStatus={onToggleReadingStatus}
+              onViewNotes={onViewNotes}
             />
           </div>
         ))}
