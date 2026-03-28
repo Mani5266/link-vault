@@ -129,7 +129,6 @@ body {
   /* Accent top-border for cards — premium gradient version */
   .card-accent-top {
     position: relative;
-    overflow: hidden;
   }
   .card-accent-top::before {
     content: "";
@@ -143,6 +142,8 @@ body {
     transform: scaleX(0);
     transform-origin: left;
     transition: opacity 0.3s ease, transform 0.4s var(--ease-out-expo);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    z-index: 1;
   }
   .card-accent-top:hover::before {
     opacity: 1;
