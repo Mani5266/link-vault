@@ -636,7 +636,6 @@ function SummaryPanel({
 function ContextMenu({
   link,
   copied,
-  anchorRef,
   onCopy,
   onClose,
   onEdit,
@@ -649,7 +648,7 @@ function ContextMenu({
 }: {
   link: Link;
   copied: boolean;
-  anchorRef: React.RefObject<HTMLDivElement>;
+  anchorRef?: React.RefObject<HTMLDivElement>;
   onCopy: () => void;
   onClose: () => void;
   onEdit?: (link: Link) => void;
@@ -660,44 +659,6 @@ function ContextMenu({
   onToggleReadingStatus?: (link: Link, status: ReadingStatus | null) => void;
   onViewNotes?: (link: Link) => void;
 }) {
-  const menuElRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ top?: number; bottom?: number; left?: number; right?: number }>({});
-
-  // Position the fixed menu relative to the anchor button.
-  // Anchors to the right edge of the dots button, flips up if needed.
-  useEffect(() => {
-    const anchor = anchorRef.current;
-    const menu = menuElRef.current;
-    if (!anchor || !menu) return;
-
-    const btn = anchor.querySelector("button") || anchor;
-    const btnRect = btn.getBoundingClientRect();
-    const menuWidth = menu.offsetWidth;
-    const menuHeight = menu.scrollHeight;
-    const viewportW = window.innerWidth;
-    const viewportH = window.innerHeight;
-
-    // Horizontal: align right edge of menu with right edge of button
-    let left = btnRect.right - menuWidth;
-    // If menu overflows left side, push it right
-    if (left < 8) left = 8;
-    // If menu overflows right side, pull it left
-    if (left + menuWidth > viewportW - 8) left = viewportW - menuWidth - 8;
-
-    // Vertical: prefer opening below the button
-    const spaceBelow = viewportH - btnRect.bottom - 8;
-    const spaceAbove = btnRect.top - 8;
-
-    if (menuHeight <= spaceBelow) {
-      setPos({ top: btnRect.bottom + 4, left });
-    } else if (menuHeight <= spaceAbove) {
-      setPos({ bottom: viewportH - btnRect.top + 4, left });
-    } else {
-      // Not enough space either way — open below and let it scroll
-      setPos({ top: btnRect.bottom + 4, left });
-    }
-  }, [anchorRef]);
-
   function action(fn?: (link: Link) => void) {
     return () => {
       fn?.(link);
@@ -707,14 +668,8 @@ function ContextMenu({
 
   return (
     <div
-      ref={menuElRef}
-      className="fixed w-48 bg-ink-50 z-[100] py-1 animate-scale-in context-menu max-h-[70vh] overflow-y-auto"
-      style={{
-        top: pos.top != null ? `${pos.top}px` : undefined,
-        bottom: pos.bottom != null ? `${pos.bottom}px` : undefined,
-        left: pos.left != null ? `${pos.left}px` : undefined,
-        right: pos.right != null ? `${pos.right}px` : undefined,
-      }}
+      className="absolute right-0 top-full mt-1 w-48 bg-ink-50 z-[100] py-1 animate-scale-in context-menu max-h-[70vh] overflow-y-auto shadow-lg border border-ink-300"
+      style={{ borderRadius: "var(--radius-md)" }}
     >
       <MenuButton onClick={() => { onCopy(); }}>
         {copied ? "Copied!" : "Copy URL"}
