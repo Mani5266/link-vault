@@ -56,9 +56,9 @@ export class HealthCheckService {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-      let res: Awaited<ReturnType<typeof fetch>>;
+      let httpCode: number;
       try {
-        res = await fetch(link.url, {
+        const headRes = await fetch(link.url, {
           method: "HEAD",
           redirect: "manual",
           signal: controller.signal,
@@ -66,10 +66,11 @@ export class HealthCheckService {
             "User-Agent": "LinkVault-HealthChecker/1.0",
           },
         });
+        httpCode = (headRes as any).status as number;
 
         // Some servers reject HEAD — retry with GET
-        if (res.status === 405 || res.status === 501) {
-          res = await fetch(link.url, {
+        if (httpCode === 405 || httpCode === 501) {
+          const getRes = await fetch(link.url, {
             method: "GET",
             redirect: "manual",
             signal: controller.signal,
@@ -77,13 +78,14 @@ export class HealthCheckService {
               "User-Agent": "LinkVault-HealthChecker/1.0",
             },
           });
+          httpCode = (getRes as any).status as number;
         }
       } finally {
         clearTimeout(timer);
       }
 
       const elapsed = Date.now() - start;
-      const status = HealthCheckService.classifyStatus(res.status);
+      const status = HealthCheckService.classifyStatus(httpCode);
 
       return {
         link_id: link.id,
@@ -92,7 +94,7 @@ export class HealthCheckService {
         domain: link.domain,
         favicon_url: link.favicon_url,
         status,
-        http_code: res.status,
+        http_code: httpCode,
         error: null,
         response_time_ms: elapsed,
       };
