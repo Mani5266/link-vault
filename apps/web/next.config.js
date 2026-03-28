@@ -50,7 +50,14 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: https://www.google.com https://*.supabase.co",
-              "connect-src 'self' https://*.supabase.co " + (process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"),
+              "connect-src 'self' https://*.supabase.co " + (() => {
+                try {
+                  const u = new URL(process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000");
+                  return u.origin;
+                } catch {
+                  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+                }
+              })(),
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
