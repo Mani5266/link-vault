@@ -216,31 +216,10 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
               Manage
             </p>
             <SidebarItem
-              emoji="#"
-              label="Tags"
-              href="/tags"
-              active={pathname === "/tags"}
-              isIndex
-            />
-            <SidebarItem
-              emoji=">"
-              label="Reading Queue"
-              href="/reading-queue"
-              active={pathname === "/reading-queue"}
-              isIndex
-            />
-            <SidebarItem
               emoji="%"
               label="Analytics"
               href="/analytics"
               active={pathname === "/analytics"}
-              isIndex
-            />
-            <SidebarItem
-              emoji="@"
-              label="RSS Feeds"
-              href="/rss-feeds"
-              active={pathname === "/rss-feeds"}
               isIndex
             />
           </div>
@@ -527,10 +506,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
                 <p className="px-3 mb-3 editorial-label text-paper-faint">
                   Manage
                 </p>
-                <SidebarItem emoji="#" label="Tags" href="/tags" active={pathname === "/tags"} isIndex />
-                <SidebarItem emoji=">" label="Reading Queue" href="/reading-queue" active={pathname === "/reading-queue"} isIndex />
                 <SidebarItem emoji="%" label="Analytics" href="/analytics" active={pathname === "/analytics"} isIndex />
-                <SidebarItem emoji="@" label="RSS Feeds" href="/rss-feeds" active={pathname === "/rss-feeds"} isIndex />
               </div>
             </nav>
 
