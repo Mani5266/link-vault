@@ -661,33 +661,40 @@ function ContextMenu({
   onViewNotes?: (link: Link) => void;
 }) {
   const menuElRef = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ top?: number; bottom?: number; right: number }>({ right: 0 });
+  const [pos, setPos] = useState<{ top?: number; bottom?: number; left?: number; right?: number }>({});
 
   // Position the fixed menu relative to the anchor button.
-  // If it would overflow the viewport bottom, flip upward.
+  // Anchors to the right edge of the dots button, flips up if needed.
   useEffect(() => {
     const anchor = anchorRef.current;
     const menu = menuElRef.current;
     if (!anchor || !menu) return;
 
-    const anchorRect = anchor.getBoundingClientRect();
+    const btn = anchor.querySelector("button") || anchor;
+    const btnRect = btn.getBoundingClientRect();
+    const menuWidth = menu.offsetWidth;
     const menuHeight = menu.scrollHeight;
+    const viewportW = window.innerWidth;
     const viewportH = window.innerHeight;
-    const rightOffset = window.innerWidth - anchorRect.right;
 
-    // Default: open below the anchor
-    const spaceBelow = viewportH - anchorRect.bottom - 8;
-    const spaceAbove = anchorRect.top - 8;
+    // Horizontal: align right edge of menu with right edge of button
+    let left = btnRect.right - menuWidth;
+    // If menu overflows left side, push it right
+    if (left < 8) left = 8;
+    // If menu overflows right side, pull it left
+    if (left + menuWidth > viewportW - 8) left = viewportW - menuWidth - 8;
+
+    // Vertical: prefer opening below the button
+    const spaceBelow = viewportH - btnRect.bottom - 8;
+    const spaceAbove = btnRect.top - 8;
 
     if (menuHeight <= spaceBelow) {
-      // Enough space below
-      setPos({ top: anchorRect.bottom + 4, right: rightOffset });
+      setPos({ top: btnRect.bottom + 4, left });
     } else if (menuHeight <= spaceAbove) {
-      // Flip upward
-      setPos({ bottom: viewportH - anchorRect.top + 4, right: rightOffset });
+      setPos({ bottom: viewportH - btnRect.top + 4, left });
     } else {
       // Not enough space either way — open below and let it scroll
-      setPos({ top: anchorRect.bottom + 4, right: rightOffset });
+      setPos({ top: btnRect.bottom + 4, left });
     }
   }, [anchorRef]);
 
@@ -705,7 +712,8 @@ function ContextMenu({
       style={{
         top: pos.top != null ? `${pos.top}px` : undefined,
         bottom: pos.bottom != null ? `${pos.bottom}px` : undefined,
-        right: `${pos.right}px`,
+        left: pos.left != null ? `${pos.left}px` : undefined,
+        right: pos.right != null ? `${pos.right}px` : undefined,
       }}
     >
       <MenuButton onClick={() => { onCopy(); }}>
