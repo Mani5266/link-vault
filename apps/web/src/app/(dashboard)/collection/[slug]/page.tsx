@@ -11,6 +11,7 @@ import { LinkGrid } from "@/components/links/LinkGrid";
 import { SortFilterBar } from "@/components/links/SortFilterBar";
 import { BulkActionBar } from "@/components/links/BulkActionBar";
 import { BulkMoveModal } from "@/components/links/BulkMoveModal";
+import { AddCollectionModal } from "@/components/collections/AddCollectionModal";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import Link from "next/link";
 import type { Link as LinkType, LinkSortField, SortDirection, LinkCategory } from "@linkvault/shared";
@@ -48,6 +49,7 @@ export default function CollectionPage({
   });
 
   const [isBulkMoveOpen, setIsBulkMoveOpen] = useState(false);
+  const [isAddSubcollectionOpen, setIsAddSubcollectionOpen] = useState(false);
 
   // Sort pinned first to match LinkGrid's display order
   const sortedLinks = useMemo(() => {
@@ -144,6 +146,19 @@ export default function CollectionPage({
                 ? `${total} link${total === 1 ? "" : "s"}`
                 : null}
             </p>
+            {/* Add Sub-collection — only for top-level collections */}
+            {collection && !collection.parent_id && (
+              <button
+                onClick={() => setIsAddSubcollectionOpen(true)}
+                className="mt-3 flex items-center gap-1.5 px-3 py-1.5 text-xs font-body font-medium text-paper-dim hover:text-paper bg-ink-100 hover:bg-ink-200 border border-ink-300 transition-all duration-200"
+                style={{ borderRadius: "var(--radius-sm)" }}
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                Add Sub-collection
+              </button>
+            )}
           </div>
           <BulkActionBar
             linkIds={links.map((l) => l.id)}
@@ -207,6 +222,15 @@ export default function CollectionPage({
         onMove={handleBulkMove}
         onClose={() => setIsBulkMoveOpen(false)}
       />
+
+      {/* Add Sub-collection Modal */}
+      {collection && !collection.parent_id && (
+        <AddCollectionModal
+          isOpen={isAddSubcollectionOpen}
+          onClose={() => setIsAddSubcollectionOpen(false)}
+          parentId={collection.id}
+        />
+      )}
     </div>
   );
 }
