@@ -47,7 +47,7 @@ function ToastItem({
   return (
     <div
       className={cn(
-        "pointer-events-auto flex items-center gap-3 px-4 py-3 border shadow-md animate-slide-up font-body",
+        "pointer-events-auto flex items-center gap-3 px-4 py-3 border animate-slide-up font-body shadow-toast",
         variant === "success" && "bg-ink-50 border-success/20 text-success",
         variant === "error" && "bg-ink-50 border-danger/20 text-danger",
         variant === "info" && "bg-ink-50 border-accent/20 text-accent"
@@ -68,7 +68,7 @@ function ToastItem({
       {action && (
         <button
           onClick={() => { action.onClick(); onDismiss(); }}
-          className="shrink-0 px-2 py-0.5 text-xs font-semibold uppercase tracking-editorial text-paper hover:text-white bg-ink-300 hover:bg-ink-400 transition-colors"
+          className="shrink-0 px-2 py-0.5 text-xs font-semibold uppercase tracking-editorial text-paper hover:text-white bg-ink-300 hover:bg-ink-400 transition-all duration-200 hover:scale-105"
           style={{ borderRadius: "var(--radius-sm)" }}
         >
           {action.label}
@@ -78,7 +78,7 @@ function ToastItem({
       {/* Dismiss */}
       <button
         onClick={onDismiss}
-        className="shrink-0 p-0.5 hover:bg-ink-200 transition-colors opacity-60 hover:opacity-100"
+        className="shrink-0 p-0.5 hover:bg-ink-200 transition-all duration-200 opacity-60 hover:opacity-100"
         style={{ borderRadius: "var(--radius-sm)" }}
       >
         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -44,32 +44,6 @@ export function truncate(str: string, maxLength: number): string {
 }
 
 /**
- * Generate a slug from a string.
- */
-export function slugify(str: string): string {
-  return str
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/[\s_-]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-/**
- * Debounce a function call.
- */
-export function debounce<T extends (...args: unknown[]) => unknown>(
-  fn: T,
-  delay: number
-): (...args: Parameters<T>) => void {
-  let timeoutId: ReturnType<typeof setTimeout>;
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => fn(...args), delay);
-  };
-}
-
-/**
  * Copy text to clipboard.
  */
 export async function copyToClipboard(text: string): Promise<boolean> {

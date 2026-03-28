@@ -30,7 +30,7 @@ export function EmptyState({
   // Search-specific empty state
   if (searchQuery) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[40vh] text-center px-4 animate-fade-in">
+      <div className="flex flex-col items-center justify-center min-h-[40vh] text-center px-4 animate-fade-in-up">
         {/* Decorative line */}
         <div className="w-8 h-px bg-ink-400 mb-8" />
 
@@ -53,7 +53,7 @@ export function EmptyState({
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4 animate-fade-in">
+    <div className="flex flex-col items-center justify-center min-h-[50vh] text-center px-4 animate-fade-in-up">
       {/* Decorative line */}
       <div className="w-8 h-px bg-ink-400 mb-8" />
 
@@ -167,7 +167,7 @@ function OnboardingTip({
   description: string;
 }) {
   return (
-    <div className="flex items-start gap-3 px-4 py-3 bg-ink-50 border border-ink-300 text-left" style={{ borderRadius: "var(--radius-md)" }}>
+    <div className="flex items-start gap-3 px-4 py-3 bg-ink-50 border border-ink-300 text-left hover:border-ink-400 hover:bg-ink-100 transition-all duration-200" style={{ borderRadius: "var(--radius-md)" }}>
       <span className="font-mono text-micro text-accent font-bold mt-0.5 shrink-0">
         {step}
       </span>

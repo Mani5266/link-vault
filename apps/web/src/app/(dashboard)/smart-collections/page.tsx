@@ -186,7 +186,7 @@ export default function SmartCollectionsPage() {
   };
 
   return (
-    <div>
+    <div className="animate-fade-in">
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between gap-4">

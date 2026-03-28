@@ -21,7 +21,7 @@ export function LinkCardSkeleton({ viewMode }: LinkCardSkeletonProps) {
 function GridCardSkeleton() {
   return (
     <div
-      className="flex flex-col border border-ink-300 bg-ink-50"
+      className="flex flex-col border border-ink-300 bg-ink-50 animate-fade-in"
       style={{ borderRadius: "var(--radius-sm)" }}
     >
       {/* Header */}
@@ -57,7 +57,7 @@ function GridCardSkeleton() {
 function ListRowSkeleton() {
   return (
     <div
-      className="flex items-center gap-4 px-4 py-3 border border-ink-300 bg-ink-50"
+      className="flex items-center gap-4 px-4 py-3 border border-ink-300 bg-ink-50 animate-fade-in"
       style={{ borderRadius: "var(--radius-sm)" }}
     >
       {/* Icon */}

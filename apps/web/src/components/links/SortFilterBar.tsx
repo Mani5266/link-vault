@@ -48,13 +48,13 @@ export const SortFilterBar = memo(function SortFilterBar({
   const hasActiveFilters = category !== undefined || isPinned !== undefined;
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex items-center gap-2 flex-wrap animate-fade-in">
       {/* Sort dropdown */}
       <div className="relative flex-shrink-0">
         <select
           value={currentSort}
           onChange={(e) => handleSortSelect(e.target.value)}
-          className="appearance-none pl-3 pr-7 py-1.5 bg-ink-50 border border-ink-300 text-xs text-paper-muted hover:border-ink-400 focus:border-accent focus:ring-0 outline-none transition-colors cursor-pointer font-body"
+          className="appearance-none pl-3 pr-7 py-1.5 bg-ink-50 border border-ink-300 text-xs text-paper-muted hover:border-ink-400 hover:bg-ink-100 focus:border-accent focus:ring-0 outline-none transition-all duration-200 cursor-pointer font-body"
           style={{ borderRadius: "var(--radius-sm)" }}
         >
           {SORT_OPTIONS.map((opt) => (
@@ -74,7 +74,7 @@ export const SortFilterBar = memo(function SortFilterBar({
             const val = e.target.value;
             onCategoryChange(val ? (val as LinkCategory) : undefined);
           }}
-          className="appearance-none pl-3 pr-7 py-1.5 bg-ink-50 border border-ink-300 text-xs text-paper-muted hover:border-ink-400 focus:border-accent focus:ring-0 outline-none transition-colors cursor-pointer font-body"
+          className="appearance-none pl-3 pr-7 py-1.5 bg-ink-50 border border-ink-300 text-xs text-paper-muted hover:border-ink-400 hover:bg-ink-100 focus:border-accent focus:ring-0 outline-none transition-all duration-200 cursor-pointer font-body"
           style={{ borderRadius: "var(--radius-sm)" }}
         >
           <option value="">All categories</option>
@@ -96,10 +96,10 @@ export const SortFilterBar = memo(function SortFilterBar({
             onPinnedChange(undefined);
           }
         }}
-        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-body border transition-colors ${
+        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-body border transition-all duration-200 ${
           isPinned
-            ? "bg-accent-subtle border-accent/20 text-accent"
-            : "bg-ink-50 border-ink-300 text-paper-dim hover:border-ink-400 hover:text-paper-muted"
+            ? "bg-accent-subtle border-accent/20 text-accent shadow-glow-accent"
+            : "bg-ink-50 border-ink-300 text-paper-dim hover:border-ink-400 hover:text-paper-muted hover:bg-ink-100"
         }`}
         style={{ borderRadius: "var(--radius-sm)" }}
       >
@@ -116,7 +116,8 @@ export const SortFilterBar = memo(function SortFilterBar({
             onCategoryChange(undefined);
             onPinnedChange(undefined);
           }}
-          className="text-xs text-paper-faint hover:text-paper-muted px-2 py-1 transition-colors font-body"
+          className="text-xs text-paper-faint hover:text-paper-muted px-2 py-1 transition-all duration-200 hover:bg-ink-100 font-body"
+          style={{ borderRadius: "var(--radius-sm)" }}
         >
           Clear filters
         </button>

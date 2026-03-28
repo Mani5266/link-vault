@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: linkvault-api
+    runtime: node
+    plan: free
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @linkvault/shared build && pnpm --filter @linkvault/api build
+    startCommand: node apps/api/dist/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false

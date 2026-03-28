@@ -64,7 +64,7 @@ export default function DuplicatesPage() {
   const totalDuplicates = groups.reduce((sum, g) => sum + g.links.length, 0);
 
   return (
-    <div>
+    <div className="animate-fade-in">
       {/* Page header */}
       <div className="mb-8">
         <div className="flex items-center justify-between gap-4">

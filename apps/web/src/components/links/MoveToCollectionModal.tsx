@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import { useLinkStore } from "@/stores/linkStore";
-import { useCollectionStore } from "@/stores/collectionStore";
+import { useCollectionStore, buildCollectionTree } from "@/stores/collectionStore";
 import { useToast } from "@/stores/toastStore";
 import { apiClient, ApiError } from "@/lib/api";
 import type { Link, ApiResponse } from "@linkvault/shared";
@@ -123,7 +123,7 @@ export function MoveToCollectionModal({
           </button>
         </div>
 
-        {/* Collection list */}
+        {/* Collection list — tree view */}
         <div className="p-4 space-y-1 max-h-[50vh] overflow-y-auto">
           {/* No collection option */}
           <CollectionOption
@@ -133,15 +133,31 @@ export function MoveToCollectionModal({
             onClick={() => setSelectedId(null)}
           />
 
-          {collections.map((col) => (
-            <CollectionOption
-              key={col.id}
-              emoji={col.emoji}
-              name={col.name}
-              linkCount={col.link_count}
-              selected={selectedId === col.id}
-              onClick={() => setSelectedId(col.id)}
-            />
+          {buildCollectionTree(collections).map((node) => (
+            <div key={node.id}>
+              <CollectionOption
+                emoji={node.emoji}
+                name={node.name}
+                linkCount={node.link_count}
+                selected={selectedId === node.id}
+                onClick={() => setSelectedId(node.id)}
+              />
+              {node.children.length > 0 && (
+                <div className="ml-4 pl-2 border-l border-ink-300/40">
+                  {node.children.map((child) => (
+                    <CollectionOption
+                      key={child.id}
+                      emoji={child.emoji}
+                      name={child.name}
+                      linkCount={child.link_count}
+                      selected={selectedId === child.id}
+                      onClick={() => setSelectedId(child.id)}
+                      isChild
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </div>
 
@@ -185,24 +201,26 @@ function CollectionOption({
   linkCount,
   selected,
   onClick,
+  isChild = false,
 }: {
   emoji: string;
   name: string;
   linkCount?: number;
   selected: boolean;
   onClick: () => void;
+  isChild?: boolean;
 }) {
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm transition-colors font-body ${
+      className={`w-full flex items-center gap-3 px-3 ${isChild ? "py-2 text-xs" : "py-2.5 text-sm"} transition-colors font-body ${
         selected
           ? "bg-accent-subtle text-accent border border-accent/20"
           : "text-paper-muted hover:bg-ink-200 hover:text-paper"
       }`}
       style={{ borderRadius: "var(--radius-sm)" }}
     >
-      <span className="text-base">{emoji}</span>
+      <span className={isChild ? "text-sm" : "text-base"}>{emoji}</span>
       <span className="flex-1 text-left">{name}</span>
       {linkCount !== undefined && (
         <span className="text-micro text-paper-faint tabular-nums">{linkCount}</span>

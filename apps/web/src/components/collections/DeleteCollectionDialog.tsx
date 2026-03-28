@@ -21,12 +21,17 @@ export function DeleteCollectionDialog({
   onClose,
 }: DeleteCollectionDialogProps) {
   const { accessToken } = useAuthStore();
-  const { removeCollection } = useCollectionStore();
+  const { removeCollection, collections } = useCollectionStore();
   const toast = useToast();
 
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
+
+  // Count child collections
+  const childCount = collection
+    ? collections.filter((c) => c.parent_id === collection.id).length
+    : 0;
 
   // Reset state when collection changes
   useEffect(() => {
@@ -113,7 +118,12 @@ export function DeleteCollectionDialog({
             <span className="text-paper font-medium">
               {collection.emoji} &quot;{collection.name}&quot;
             </span>
-            ? Links in this collection will become uncategorized. This action cannot be undone.
+            ?{childCount > 0 && (
+              <span className="text-danger font-medium">
+                {" "}This will also delete {childCount} sub-collection{childCount !== 1 ? "s" : ""}.
+              </span>
+            )}{" "}
+            Links will become uncategorized. This action cannot be undone.
           </p>
         </div>
 

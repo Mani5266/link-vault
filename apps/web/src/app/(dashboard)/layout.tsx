@@ -17,7 +17,7 @@ import { useLinks } from "@/hooks/useLinks";
 import { useAI } from "@/hooks/useAI";
 import { useUIStore } from "@/stores/uiStore";
 import { useLinkStore } from "@/stores/linkStore";
-import { useCollectionStore } from "@/stores/collectionStore";
+import { useCollectionStore, buildCollectionTree } from "@/stores/collectionStore";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { DEFAULT_COLLECTIONS } from "@linkvault/shared";
@@ -57,11 +57,12 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
     aiSearchLoading,
     setAISearchLoading,
   } = useUIStore();
-  const { collections } = useCollectionStore();
+  const { collections, expandedIds, toggleExpanded } = useCollectionStore();
   const { setFilters } = useLinkStore();
   const { deleteLink } = useLinks();
   const { semanticSearch } = useAI();
   const [isAddCollectionOpen, setIsAddCollectionOpen] = useState(false);
+  const [addCollectionParentId, setAddCollectionParentId] = useState<string | null>(null);
   const [editingCollection, setEditingCollection] = useState<Collection | null>(null);
   const [deletingCollection, setDeletingCollection] = useState<Collection | null>(null);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
@@ -126,22 +127,22 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
     [isAISearchMode, handleAISearch]
   );
 
-  // Use real collections from store if loaded, fall back to defaults
-  const navCollections = collections.length > 0
-    ? collections.map((c) => ({ name: c.name, slug: c.slug, emoji: c.emoji }))
-    : DEFAULT_COLLECTIONS.map((c) => ({ name: c.name, slug: c.slug, emoji: c.emoji }));
+  // Build collection tree for sidebar rendering
+  const collectionTree = collections.length > 0
+    ? buildCollectionTree(collections)
+    : DEFAULT_COLLECTIONS.map((c) => ({ ...c, id: c.slug, user_id: "", is_default: true, position: c.position, parent_id: null, created_at: "", children: [] }));
 
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar — Desktop */}
-      <aside className="hidden md:flex flex-col w-[260px] border-r border-ink-300 bg-ink shrink-0">
+      <aside className="hidden md:flex flex-col w-[260px] border-r border-ink-300 bg-ink shrink-0 animate-fade-in">
         {/* Logo / Masthead */}
         <div className="flex items-center gap-3 px-5 h-14 border-b border-ink-300">
           <span className="font-display font-bold text-sm tracking-[0.15em] uppercase text-paper">
             LinkVault
           </span>
           <div className="flex-1" />
-          <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+          <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse-subtle" />
         </div>
 
         {/* Collections Navigation — Table of Contents */}
@@ -157,25 +158,52 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
               active={pathname === "/"}
               isIndex
             />
-            {navCollections.map((col) => (
-              <SidebarItem
-                key={col.slug}
-                emoji={col.emoji}
-                label={col.name}
-                href={`/collection/${col.slug}`}
-                active={pathname === `/collection/${col.slug}`}
-                collection={collections.find((c) => c.slug === col.slug) || null}
-                onEdit={(c) => setEditingCollection(c)}
-                onDelete={(c) => setDeletingCollection(c)}
-              />
+            {collectionTree.map((node) => (
+              <div key={node.slug}>
+                <SidebarItem
+                  emoji={node.emoji}
+                  label={node.name}
+                  href={`/collection/${node.slug}`}
+                  active={pathname === `/collection/${node.slug}`}
+                  collection={collections.find((c) => c.slug === node.slug) || null}
+                  onEdit={(c) => setEditingCollection(c)}
+                  onDelete={(c) => setDeletingCollection(c)}
+                  onAddSubcollection={node.parent_id === null ? (c) => {
+                    setAddCollectionParentId(c.id);
+                    setIsAddCollectionOpen(true);
+                  } : undefined}
+                  hasChildren={node.children.length > 0}
+                  isExpanded={expandedIds.includes(node.id)}
+                  onToggleExpand={() => toggleExpanded(node.id)}
+                />
+                {/* Render children when expanded */}
+                {node.children.length > 0 && expandedIds.includes(node.id) && (
+                  <div className="ml-3 pl-2 border-l border-ink-300/50">
+                    {node.children.map((child) => (
+                      <SidebarItem
+                        key={child.slug}
+                        emoji={child.emoji}
+                        label={child.name}
+                        href={`/collection/${child.slug}`}
+                        active={pathname === `/collection/${child.slug}`}
+                        collection={collections.find((c) => c.slug === child.slug) || null}
+                        onEdit={(c) => setEditingCollection(c)}
+                        onDelete={(c) => setDeletingCollection(c)}
+                        isChild
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
 
             {/* Add New Collection */}
             <button
-              onClick={() => setIsAddCollectionOpen(true)}
-              className="w-full flex items-center gap-3 px-3 py-2 text-caption text-paper-faint hover:text-paper-muted transition-colors mt-2"
+              onClick={() => { setAddCollectionParentId(null); setIsAddCollectionOpen(true); }}
+              className="w-full flex items-center gap-3 px-3 py-2 text-caption text-paper-faint hover:text-paper-muted hover:bg-ink-100 transition-all duration-200 mt-2 group/add"
+              style={{ borderRadius: "var(--radius-sm)" }}
             >
-              <svg className="w-3.5 h-3.5 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+              <svg className="w-3.5 h-3.5 ml-0.5 transition-transform duration-200 group-hover/add:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
               </svg>
               <span>New Collection</span>
@@ -248,7 +276,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="flex items-center justify-between gap-4 px-4 md:px-6 h-14 border-b border-ink-300 bg-ink shrink-0">
+        <header className="flex items-center justify-between gap-4 px-4 md:px-6 h-14 border-b border-ink-300 bg-ink shrink-0 glass-warm">
           {/* Mobile hamburger + logo */}
           <div className="md:hidden flex items-center gap-2">
             <button
@@ -271,10 +299,10 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
               {/* AI Search Toggle */}
               <button
                 onClick={handleToggleAIMode}
-                className={`shrink-0 p-2 transition-colors ${
+                className={`shrink-0 p-2 transition-all duration-250 ${
                   isAISearchMode
-                    ? "text-gold bg-gold/10 border border-gold/30"
-                    : "text-paper-faint hover:text-gold border border-transparent"
+                    ? "text-gold bg-gold/10 border border-gold/30 shadow-glow-gold"
+                    : "text-paper-faint hover:text-gold border border-transparent hover:border-gold/20"
                 }`}
                 style={{ borderRadius: "var(--radius-sm)" }}
                 title={isAISearchMode ? "Switch to regular search" : "Switch to AI search"}
@@ -308,10 +336,10 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={handleSearchKeyDown}
-                  className={`w-full pl-10 pr-4 py-2 bg-ink-50 border text-sm text-paper placeholder:text-paper-faint transition-colors outline-none ${
+                  className={`w-full pl-10 pr-4 py-2 bg-ink-50 border text-sm text-paper placeholder:text-paper-faint outline-none transition-all duration-250 ${
                     isAISearchMode
-                      ? "border-gold/30 focus:border-gold"
-                      : "border-ink-300 focus:border-accent"
+                      ? "border-gold/30 focus:border-gold focus:shadow-glow-gold"
+                      : "border-ink-300 focus:border-accent focus:shadow-glow-accent"
                   }`}
                   style={{ borderRadius: "var(--radius-sm)" }}
                 />
@@ -353,7 +381,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
             {/* Keyboard Shortcuts Help */}
             <button
               onClick={() => useLinkStore.getState().setShortcutsModalOpen(true)}
-              className="p-2 text-paper-faint hover:text-paper-muted transition-colors hidden sm:block"
+              className="p-2 text-paper-faint hover:text-paper-muted hover:bg-ink-200 transition-all duration-200 hidden sm:block"
               style={{ borderRadius: "var(--radius-sm)" }}
               title="Keyboard shortcuts (?)"
             >
@@ -365,7 +393,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
             {/* View Toggle */}
             <button
               onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
-              className="p-2 text-paper-muted hover:text-paper transition-colors"
+              className="p-2 text-paper-muted hover:text-paper hover:bg-ink-200 transition-all duration-200"
               style={{ borderRadius: "var(--radius-sm)" }}
               title={`Switch to ${viewMode === "grid" ? "list" : "grid"} view`}
             >
@@ -420,7 +448,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-20 md:pb-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-20 md:pb-6 animate-fade-in">
           {children}
         </main>
       </div>
@@ -467,20 +495,46 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
                   active={pathname === "/"}
                   isIndex
                 />
-                {navCollections.map((col) => (
-                  <SidebarItem
-                    key={col.slug}
-                    emoji={col.emoji}
-                    label={col.name}
-                    href={`/collection/${col.slug}`}
-                    active={pathname === `/collection/${col.slug}`}
-                    collection={collections.find((c) => c.slug === col.slug) || null}
-                    onEdit={(c) => { setMobileDrawerOpen(false); setEditingCollection(c); }}
-                    onDelete={(c) => { setMobileDrawerOpen(false); setDeletingCollection(c); }}
-                  />
+                {collectionTree.map((node) => (
+                  <div key={node.slug}>
+                    <SidebarItem
+                      emoji={node.emoji}
+                      label={node.name}
+                      href={`/collection/${node.slug}`}
+                      active={pathname === `/collection/${node.slug}`}
+                      collection={collections.find((c) => c.slug === node.slug) || null}
+                      onEdit={(c) => { setMobileDrawerOpen(false); setEditingCollection(c); }}
+                      onDelete={(c) => { setMobileDrawerOpen(false); setDeletingCollection(c); }}
+                      onAddSubcollection={node.parent_id === null ? (c) => {
+                        setMobileDrawerOpen(false);
+                        setAddCollectionParentId(c.id);
+                        setIsAddCollectionOpen(true);
+                      } : undefined}
+                      hasChildren={node.children.length > 0}
+                      isExpanded={expandedIds.includes(node.id)}
+                      onToggleExpand={() => toggleExpanded(node.id)}
+                    />
+                    {node.children.length > 0 && expandedIds.includes(node.id) && (
+                      <div className="ml-3 pl-2 border-l border-ink-300/50">
+                        {node.children.map((child) => (
+                          <SidebarItem
+                            key={child.slug}
+                            emoji={child.emoji}
+                            label={child.name}
+                            href={`/collection/${child.slug}`}
+                            active={pathname === `/collection/${child.slug}`}
+                            collection={collections.find((c) => c.slug === child.slug) || null}
+                            onEdit={(c) => { setMobileDrawerOpen(false); setEditingCollection(c); }}
+                            onDelete={(c) => { setMobileDrawerOpen(false); setDeletingCollection(c); }}
+                            isChild
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 ))}
                 <button
-                  onClick={() => { setMobileDrawerOpen(false); setIsAddCollectionOpen(true); }}
+                  onClick={() => { setMobileDrawerOpen(false); setAddCollectionParentId(null); setIsAddCollectionOpen(true); }}
                   className="w-full flex items-center gap-3 px-3 py-2 text-caption text-paper-faint hover:text-paper-muted transition-colors mt-2"
                 >
                   <svg className="w-3.5 h-3.5 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
@@ -513,7 +567,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
       )}
 
       {/* Mobile Bottom Nav */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 bg-ink border-t border-ink-300 flex items-center justify-around h-14 z-50">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 bg-ink/95 backdrop-blur-lg border-t border-ink-300 flex items-center justify-around h-14 z-50">
         <MobileNavItem
           label="All"
           href="/"
@@ -551,7 +605,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
       <EditLinkModal link={editingLink} onClose={() => setEditingLink(null)} />
       <DeleteConfirmDialog link={deletingLink} onConfirm={deleteLink} onClose={() => setDeletingLink(null)} />
       <MoveToCollectionModal link={movingLink} onClose={() => setMovingLink(null)} />
-      <AddCollectionModal isOpen={isAddCollectionOpen} onClose={() => setIsAddCollectionOpen(false)} />
+      <AddCollectionModal isOpen={isAddCollectionOpen} onClose={() => { setIsAddCollectionOpen(false); setAddCollectionParentId(null); }} parentId={addCollectionParentId} />
       <EditCollectionModal collection={editingCollection} onClose={() => setEditingCollection(null)} />
       <DeleteCollectionDialog
         collection={deletingCollection}
@@ -577,18 +631,28 @@ function SidebarItem({
   href,
   active = false,
   isIndex = false,
+  isChild = false,
   collection = null,
   onEdit,
   onDelete,
+  onAddSubcollection,
+  hasChildren = false,
+  isExpanded = false,
+  onToggleExpand,
 }: {
   emoji: string;
   label: string;
   href: string;
   active?: boolean;
   isIndex?: boolean;
+  isChild?: boolean;
   collection?: Collection | null;
   onEdit?: (collection: Collection) => void;
   onDelete?: (collection: Collection) => void;
+  onAddSubcollection?: (collection: Collection) => void;
+  hasChildren?: boolean;
+  isExpanded?: boolean;
+  onToggleExpand?: () => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -607,20 +671,49 @@ function SidebarItem({
 
   return (
     <div className="relative group mb-px">
-      <Link
-        href={href}
-        className={`w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors duration-150 ${
-          active
-            ? "text-paper bg-ink-200 border-l-2 border-accent -ml-px pl-[11px]"
-            : "text-paper-muted hover:text-paper hover:bg-ink-100"
-        }`}
-        style={{ borderRadius: active ? 0 : "var(--radius-sm)" }}
-      >
-        <span className={`text-sm shrink-0 ${isIndex ? "font-mono text-xs text-paper-faint" : ""}`}>
-          {isIndex ? "//" : emoji}
-        </span>
-        <span className="flex-1 text-left truncate">{label}</span>
-      </Link>
+      <div className="flex items-center">
+        {/* Expand/collapse chevron for parent collections with children */}
+        {hasChildren && onToggleExpand ? (
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onToggleExpand();
+            }}
+            className="shrink-0 p-1 ml-0.5 text-paper-faint hover:text-paper-muted transition-colors"
+            aria-label={isExpanded ? "Collapse" : "Expand"}
+          >
+            <svg
+              className={`w-3 h-3 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        ) : !isIndex && !isChild ? (
+          <div className="w-5 shrink-0" />
+        ) : null}
+
+        <Link
+          href={href}
+          className={`w-full flex items-center gap-3 px-3 py-2 text-sm transition-all duration-200 ${
+            isChild ? "py-1.5 text-xs" : ""
+          } ${
+            active
+              ? "text-paper bg-ink-200 border-l-2 border-accent -ml-px pl-[11px] shadow-inner-glow"
+              : "text-paper-muted hover:text-paper hover:bg-ink-100 hover:translate-x-0.5"
+          }`}
+          style={{ borderRadius: active ? 0 : "var(--radius-sm)" }}
+        >
+          <span className={`shrink-0 ${isIndex ? "font-mono text-xs text-paper-faint" : isChild ? "text-xs" : "text-sm"}`}>
+            {isIndex ? "//" : emoji}
+          </span>
+          <span className="flex-1 text-left truncate">{label}</span>
+        </Link>
+      </div>
 
       {/* Three-dot menu — only for real collections */}
       {collection && onEdit && onDelete && (
@@ -644,24 +737,36 @@ function SidebarItem({
 
           {/* Dropdown */}
           {menuOpen && (
-            <div className="absolute right-0 top-full mt-1 w-32 border border-ink-300 bg-ink-100 shadow-lg z-50 py-1 animate-fade-in" style={{ borderRadius: "var(--radius-md)" }}>
+            <div className="absolute right-0 top-full mt-1 w-40 border border-ink-300 bg-ink-100 z-50 py-1 animate-scale-in context-menu">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setMenuOpen(false);
                   onEdit(collection);
                 }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-paper-muted hover:text-paper hover:bg-ink-200 transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-paper-muted hover:text-paper hover:bg-ink-200 transition-all duration-150"
               >
                 Edit
               </button>
+              {onAddSubcollection && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setMenuOpen(false);
+                    onAddSubcollection(collection);
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-paper-muted hover:text-paper hover:bg-ink-200 transition-all duration-150"
+                >
+                  Add Sub-collection
+                </button>
+              )}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setMenuOpen(false);
                   onDelete(collection);
                 }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-danger hover:bg-danger-subtle transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-danger hover:bg-danger-subtle transition-all duration-150"
               >
                 Delete
               </button>
@@ -691,8 +796,8 @@ function MobileNavItem({
   return (
     <Link
       href={href}
-      className={`flex flex-col items-center gap-0.5 px-3 py-1 transition-colors ${
-        active ? "text-paper" : "text-paper-faint"
+      className={`flex flex-col items-center gap-0.5 px-3 py-1 transition-all duration-200 ${
+        active ? "text-paper scale-105" : "text-paper-faint hover:text-paper-muted"
       }`}
     >
       {icon}

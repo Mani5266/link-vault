@@ -20,7 +20,7 @@ export default function DigestPage() {
   }, [generateDigest, days]);
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto animate-fade-in">
       {/* Header */}
       <div className="mb-8">
         <h1 className="font-display text-display-sm text-paper mb-2">

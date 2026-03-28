@@ -6,6 +6,7 @@ import type { Collection } from "@linkvault/shared";
 export class CollectionService {
   /**
    * Get all collections for a user, including link counts.
+   * Returns flat list — frontend builds the tree using parent_id.
    */
   static async getCollections(userId: string): Promise<Collection[]> {
     const { data, error } = await supabaseAdmin
@@ -28,12 +29,32 @@ export class CollectionService {
   }
 
   /**
-   * Create a new collection.
+   * Create a new collection, optionally nested under a parent.
+   * parent_id must reference a top-level collection (one with parent_id = null).
    */
   static async createCollection(
     userId: string,
-    input: { name: string; emoji?: string; color?: string }
+    input: { name: string; emoji?: string; color?: string; parent_id?: string | null }
   ): Promise<Collection> {
+    const parentId = input.parent_id || null;
+
+    // Validate parent exists and is top-level
+    if (parentId) {
+      const { data: parent, error: parentError } = await supabaseAdmin
+        .from("collections")
+        .select("id, parent_id")
+        .eq("id", parentId)
+        .eq("user_id", userId)
+        .single();
+
+      if (parentError || !parent) {
+        throw new Error("Parent collection not found");
+      }
+      if (parent.parent_id !== null) {
+        throw new Error("Cannot nest more than one level deep");
+      }
+    }
+
     const slug = input.name
       .toLowerCase()
       .trim()
@@ -41,11 +62,19 @@ export class CollectionService {
       .replace(/[\s_-]+/g, "-")
       .replace(/^-+|-+$/g, "");
 
-    // Get the next position
-    const { count } = await supabaseAdmin
+    // Get the next position scoped to siblings (same parent_id)
+    let query = supabaseAdmin
       .from("collections")
       .select("id", { count: "exact", head: true })
       .eq("user_id", userId);
+
+    if (parentId) {
+      query = query.eq("parent_id", parentId);
+    } else {
+      query = query.is("parent_id", null);
+    }
+
+    const { count } = await query;
 
     const { data, error } = await supabaseAdmin
       .from("collections")
@@ -56,7 +85,8 @@ export class CollectionService {
         emoji: input.emoji || "📁",
         color: input.color || "#6366f1",
         is_default: false,
-        position: (count || 0),
+        position: count || 0,
+        parent_id: parentId,
       })
       .select()
       .single();
@@ -77,6 +107,35 @@ export class CollectionService {
     collectionId: string,
     updates: Partial<Collection>
   ): Promise<Collection> {
+    // If moving to a new parent, validate the parent
+    if (updates.parent_id !== undefined && updates.parent_id !== null) {
+      const { data: parent, error: parentError } = await supabaseAdmin
+        .from("collections")
+        .select("id, parent_id")
+        .eq("id", updates.parent_id)
+        .eq("user_id", userId)
+        .single();
+
+      if (parentError || !parent) {
+        throw new Error("Parent collection not found");
+      }
+      if (parent.parent_id !== null) {
+        throw new Error("Cannot nest more than one level deep");
+      }
+    }
+
+    // If trying to become a sub-collection, verify it has no children
+    if (updates.parent_id !== undefined && updates.parent_id !== null) {
+      const { count } = await supabaseAdmin
+        .from("collections")
+        .select("id", { count: "exact", head: true })
+        .eq("parent_id", collectionId);
+
+      if (count && count > 0) {
+        throw new Error("Cannot move a collection that has sub-collections");
+      }
+    }
+
     const { data, error } = await supabaseAdmin
       .from("collections")
       .update(updates)
@@ -94,19 +153,39 @@ export class CollectionService {
   }
 
   /**
-   * Delete a collection. Links in this collection become uncategorized.
+   * Delete a collection. Links in this collection (and any child collections)
+   * become uncategorized. Child collections are cascade-deleted by the DB.
    */
   static async deleteCollection(
     userId: string,
     collectionId: string
   ): Promise<void> {
-    // First, unlink all links from this collection
+    // Find child collection IDs so we can unlink their links too
+    const { data: children } = await supabaseAdmin
+      .from("collections")
+      .select("id")
+      .eq("parent_id", collectionId)
+      .eq("user_id", userId);
+
+    const childIds = (children || []).map((c: any) => c.id);
+
+    // Unlink links from this collection
     await supabaseAdmin
       .from("links")
       .update({ collection_id: null })
       .eq("collection_id", collectionId)
       .eq("user_id", userId);
 
+    // Unlink links from child collections
+    if (childIds.length > 0) {
+      await supabaseAdmin
+        .from("links")
+        .update({ collection_id: null })
+        .in("collection_id", childIds)
+        .eq("user_id", userId);
+    }
+
+    // Delete the collection (children cascade-deleted by DB)
     const { error } = await supabaseAdmin
       .from("collections")
       .delete()

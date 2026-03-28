@@ -9,7 +9,6 @@ interface AuthStoreState {
 
   // Actions
   setAuth: (user: UserProfile | null, accessToken: string | null) => void;
-  setUser: (user: UserProfile | null) => void;
   setAccessToken: (token: string | null) => void;
   setLoading: (loading: boolean) => void;
   logout: () => void;
@@ -31,13 +30,6 @@ export const useAuthStore = create<AuthStoreState>((set) => ({
       isAuthenticated: !!user,
       isLoading: false,
       accessToken,
-    }),
-
-  setUser: (user) =>
-    set({
-      user,
-      isAuthenticated: !!user,
-      isLoading: false,
     }),
 
   setAccessToken: (accessToken) => set({ accessToken }),

@@ -100,7 +100,7 @@ export default function ReadingQueuePage() {
   );
 
   return (
-    <div>
+    <div className="animate-fade-in">
       {/* Page header */}
       <div className="mb-8">
         <div>

@@ -199,7 +199,7 @@ function GridCard({
     <article
       data-link-index={dataIndex}
       className={cn(
-        "card-accent-top group relative flex flex-col border border-ink-300 bg-ink-50 hover:border-ink-400 transition-all duration-200",
+        "card-accent-top group relative flex flex-col border border-ink-300 bg-ink-50 hover:border-ink-400 hover:shadow-card-hover transition-all duration-300 hover-lift shadow-card",
         link.is_pinned && "border-accent/20 bg-accent-subtle",
         isSelected && "border-accent/40 bg-accent-subtle ring-1 ring-accent/30",
         isFocused && "ring-1 ring-accent border-accent/50"
@@ -267,7 +267,7 @@ function GridCard({
         <div className="relative" ref={menuRef}>
           <button
             onClick={onMenuToggle}
-            className="p-1 opacity-0 group-hover:opacity-100 text-paper-dim hover:text-paper-muted transition-all"
+            className="p-1 opacity-0 group-hover:opacity-100 text-paper-dim hover:text-paper-muted hover:bg-ink-200 transition-all duration-200"
             style={{ borderRadius: "var(--radius-sm)" }}
             aria-label="Link actions"
           >
@@ -295,7 +295,7 @@ function GridCard({
         href={link.url}
         target="_blank"
         rel="noopener noreferrer"
-        className="px-4 pb-1.5 font-body font-medium text-sm text-paper hover:text-accent-hover transition-colors line-clamp-2 leading-snug"
+        className="px-4 pb-1.5 font-body font-medium text-sm text-paper hover:text-accent-hover transition-colors duration-200 line-clamp-2 leading-snug"
       >
         {truncate(displayTitle, 80)}
       </a>
@@ -318,11 +318,10 @@ function GridCard({
       )}
 
       {/* Footer — tags + date, separated by hairline */}
-      <div className="mt-auto px-4 py-3 border-t border-ink-300/60 flex items-center justify-between gap-2">
+      <div className="mt-auto px-4 py-3 border-t border-ink-300/40 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-hidden">
           {categoryMeta && (
-            <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 text-micro font-medium uppercase tracking-editorial bg-ink-200 text-paper-dim"
-              style={{ borderRadius: "2px" }}
+            <span className="shrink-0 inline-flex items-center gap-1 px-2 py-0.5 text-micro font-medium uppercase tracking-editorial bg-ink-200 text-paper-dim tag-pill"
             >
               {categoryMeta.emoji} {categoryMeta.label}
             </span>
@@ -330,8 +329,7 @@ function GridCard({
           {link.tags.slice(0, 2).map((tag) => (
             <span
               key={tag}
-              className="shrink-0 px-2 py-0.5 text-micro font-medium bg-accent-subtle text-accent"
-              style={{ borderRadius: "2px" }}
+              className="shrink-0 px-2 py-0.5 text-micro font-medium bg-accent-subtle text-accent tag-pill"
             >
               {tag}
             </span>
@@ -384,7 +382,7 @@ function ListRow({
     <article
       data-link-index={dataIndex}
       className={cn(
-        "group relative border border-ink-300 bg-ink-50 hover:border-ink-400 hover:bg-ink-100 transition-all duration-200",
+        "group relative border border-ink-300 bg-ink-50 hover:border-ink-400 hover:bg-ink-100 hover:shadow-card transition-all duration-250",
         link.is_pinned && "border-accent/20 bg-accent-subtle",
         isSelected && "border-accent/40 bg-accent-subtle ring-1 ring-accent/30",
         isFocused && "ring-1 ring-accent border-accent/50"
@@ -446,7 +444,7 @@ function ListRow({
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-body font-medium text-sm text-paper hover:text-accent-hover transition-colors truncate"
+              className="font-body font-medium text-sm text-paper hover:text-accent-hover transition-colors duration-200 truncate"
             >
               {truncate(displayTitle, 60)}
             </a>
@@ -463,8 +461,7 @@ function ListRow({
           <div className="flex items-center gap-1.5 mt-1">
             <AIBadge processed={link.ai_processed} />
             {categoryMeta && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-micro font-medium uppercase tracking-editorial bg-ink-200 text-paper-dim"
-                style={{ borderRadius: "2px" }}
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-micro font-medium uppercase tracking-editorial bg-ink-200 text-paper-dim tag-pill"
               >
                 {categoryMeta.emoji} {categoryMeta.label}
               </span>
@@ -472,8 +469,7 @@ function ListRow({
             {link.tags.slice(0, 3).map((tag) => (
               <span
                 key={tag}
-                className="px-2 py-0.5 text-micro font-medium bg-accent-subtle text-accent"
-                style={{ borderRadius: "2px" }}
+                className="px-2 py-0.5 text-micro font-medium bg-accent-subtle text-accent tag-pill"
               >
                 {tag}
               </span>
@@ -495,7 +491,7 @@ function ListRow({
         <div className="relative" ref={menuRef}>
           <button
             onClick={onMenuToggle}
-            className="p-1.5 opacity-0 group-hover:opacity-100 text-paper-dim hover:text-paper-muted transition-all"
+            className="p-1.5 opacity-0 group-hover:opacity-100 text-paper-dim hover:text-paper-muted hover:bg-ink-200 transition-all duration-200"
             style={{ borderRadius: "var(--radius-sm)" }}
             aria-label="Link actions"
           >
@@ -551,10 +547,10 @@ function SummaryPanel({
     <div className="px-4 pb-2">
       <button
         onClick={onToggle}
-        className="flex items-center gap-1 text-micro font-medium font-body text-gold hover:text-gold-hover transition-colors"
+        className="flex items-center gap-1 text-micro font-medium font-body text-gold hover:text-gold-hover transition-all duration-200"
       >
         <svg
-          className={cn("w-3 h-3 transition-transform duration-200", expanded && "rotate-90")}
+          className={cn("w-3 h-3 transition-transform duration-250", expanded && "rotate-90")}
           fill="currentColor"
           viewBox="0 0 20 20"
         >
@@ -617,8 +613,7 @@ function ContextMenu({
 
   return (
     <div
-      className="absolute right-0 top-full mt-1 w-48 border border-ink-300 bg-ink-50 shadow-lg z-50 py-1 animate-fade-in"
-      style={{ borderRadius: "var(--radius-md)" }}
+      className="absolute right-0 top-full mt-1 w-48 bg-ink-50 z-50 py-1 animate-scale-in context-menu"
     >
       <MenuButton onClick={() => { onCopy(); }}>
         {copied ? "Copied!" : "Copy URL"}
@@ -671,10 +666,10 @@ function MenuButton({
     <button
       onClick={onClick}
       className={cn(
-        "w-full text-left px-3 py-1.5 text-xs font-body transition-colors",
+        "w-full text-left px-3 py-1.5 text-xs font-body transition-all duration-150",
         variant === "danger"
           ? "text-danger hover:bg-danger-subtle"
-          : "text-paper-muted hover:bg-ink-200 hover:text-paper"
+          : "text-paper-muted hover:bg-ink-200 hover:text-paper hover:pl-4"
       )}
     >
       {children}

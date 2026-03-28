@@ -22,15 +22,17 @@ const EMOJI_OPTIONS = [
 interface AddCollectionModalProps {
   isOpen: boolean;
   onClose: () => void;
+  parentId?: string | null;
 }
 
-export function AddCollectionModal({ isOpen, onClose }: AddCollectionModalProps) {
+export function AddCollectionModal({ isOpen, onClose, parentId = null }: AddCollectionModalProps) {
   const { accessToken } = useAuthStore();
-  const { addCollection } = useCollectionStore();
+  const { addCollection, collections } = useCollectionStore();
   const toast = useToast();
 
   const [name, setName] = useState("");
   const [emoji, setEmoji] = useState("\u{1F4C1}");
+  const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,18 +40,32 @@ export function AddCollectionModal({ isOpen, onClose }: AddCollectionModalProps)
   const inputRef = useRef<HTMLInputElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
 
+  // Top-level collections available as parents
+  const topLevelCollections = collections.filter(
+    (c) => !c.parent_id && !c.is_default
+  );
+
+  // Parent collection name for display
+  const parentCollection = parentId
+    ? collections.find((c) => c.id === parentId)
+    : selectedParentId
+    ? collections.find((c) => c.id === selectedParentId)
+    : null;
+
   // Focus input on open
   useEffect(() => {
     if (isOpen) {
+      setSelectedParentId(parentId || null);
       setTimeout(() => inputRef.current?.focus(), 100);
     } else {
       setName("");
       setEmoji("\u{1F4C1}");
+      setSelectedParentId(null);
       setShowEmojiPicker(false);
       setError(null);
       setIsSubmitting(false);
     }
-  }, [isOpen]);
+  }, [isOpen, parentId]);
 
   // Close on Escape
   useEffect(() => {
@@ -83,15 +99,21 @@ export function AddCollectionModal({ isOpen, onClose }: AddCollectionModalProps)
       setError(null);
       setIsSubmitting(true);
 
+      const effectiveParentId = parentId || selectedParentId || null;
+
       const response = await apiClient.post<ApiResponse<Collection>>(
         "/collections",
-        { name: trimmed, emoji },
+        { name: trimmed, emoji, parent_id: effectiveParentId },
         accessToken
       );
 
       if (response.success && response.data) {
         addCollection(response.data);
-        toast.success(`"${trimmed}" collection created`);
+        toast.success(
+          effectiveParentId
+            ? `Sub-collection "${trimmed}" created`
+            : `"${trimmed}" collection created`
+        );
         onClose();
       }
     } catch (err) {
@@ -116,7 +138,9 @@ export function AddCollectionModal({ isOpen, onClose }: AddCollectionModalProps)
       <div className="modal-panel max-w-md">
         {/* Header */}
         <div className="modal-header">
-          <h2 className="modal-title">New Collection</h2>
+          <h2 className="modal-title">
+            {parentId ? "New Sub-collection" : "New Collection"}
+          </h2>
           <button
             onClick={onClose}
             className="p-1 text-paper-dim hover:text-paper transition-colors"
@@ -130,6 +154,35 @@ export function AddCollectionModal({ isOpen, onClose }: AddCollectionModalProps)
 
         {/* Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          {/* Parent indicator when creating sub-collection via context menu */}
+          {parentId && parentCollection && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-ink-50 border border-ink-300 text-sm text-paper-muted" style={{ borderRadius: "var(--radius-sm)" }}>
+              <span>{parentCollection.emoji}</span>
+              <span>Inside: <span className="text-paper font-medium">{parentCollection.name}</span></span>
+            </div>
+          )}
+
+          {/* Parent collection dropdown (only when no parentId prop) */}
+          {!parentId && topLevelCollections.length > 0 && (
+            <div>
+              <label className="editorial-label text-paper-dim mb-2 block">
+                Parent (optional)
+              </label>
+              <select
+                value={selectedParentId || ""}
+                onChange={(e) => setSelectedParentId(e.target.value || null)}
+                disabled={isSubmitting}
+                className="w-full input-editorial text-sm"
+              >
+                <option value="">None (top-level)</option>
+                {topLevelCollections.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.emoji} {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           {/* Name + Emoji row */}
           <div>
             <label

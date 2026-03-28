@@ -37,7 +37,7 @@ export default function SettingsPage() {
   const { user, updateProfile, updatePassword, signOut } = useAuth();
 
   return (
-    <div>
+    <div className="animate-fade-in">
       {/* Page header */}
       <div className="mb-8">
         <p className="editorial-label text-paper-faint mb-1">Account</p>

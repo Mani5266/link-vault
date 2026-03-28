@@ -20,7 +20,7 @@ export function AIBadge({ processed, isProcessing, className }: AIBadgeProps) {
     return (
       <span
         className={cn(
-          "inline-flex items-center gap-1 px-1.5 py-0.5 text-micro font-medium uppercase tracking-editorial bg-gold-subtle text-gold",
+          "inline-flex items-center gap-1 px-1.5 py-0.5 text-micro font-medium uppercase tracking-editorial bg-gold-subtle text-gold animate-pulse-subtle",
           className
         )}
         style={{ borderRadius: "2px" }}

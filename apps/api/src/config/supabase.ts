@@ -16,17 +16,3 @@ export const supabaseAdmin = createClient(
     },
   }
 );
-
-/**
- * Create a Supabase client scoped to a specific user's JWT.
- * This respects Row Level Security policies.
- */
-export function createUserClient(accessToken: string) {
-  return createClient(env.SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
-    global: {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    },
-  });
-}

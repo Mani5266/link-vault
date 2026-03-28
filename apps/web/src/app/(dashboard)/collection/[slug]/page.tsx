@@ -12,7 +12,8 @@ import { SortFilterBar } from "@/components/links/SortFilterBar";
 import { BulkActionBar } from "@/components/links/BulkActionBar";
 import { BulkMoveModal } from "@/components/links/BulkMoveModal";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import type { Link, LinkSortField, SortDirection, LinkCategory } from "@linkvault/shared";
+import Link from "next/link";
+import type { Link as LinkType, LinkSortField, SortDirection, LinkCategory } from "@linkvault/shared";
 
 // ============================================================
 // Collection Page — Editorial collection detail
@@ -62,15 +63,15 @@ export default function CollectionPage({
     links: sortedLinks,
     onEdit: (id) => {
       const link = sortedLinks.find((l) => l.id === id);
-      if (link) setEditingLink(link as Link);
+      if (link) setEditingLink(link as LinkType);
     },
     onDelete: (id) => {
       const link = sortedLinks.find((l) => l.id === id);
-      if (link) setDeletingLink(link as Link);
+      if (link) setDeletingLink(link as LinkType);
     },
     onTogglePin: (id) => {
       const link = sortedLinks.find((l) => l.id === id);
-      if (link) togglePin(link as Link);
+      if (link) togglePin(link as LinkType);
     },
     onToggleSelect: (id) => toggleSelection(id),
   });
@@ -78,6 +79,15 @@ export default function CollectionPage({
   const displayName = collection
     ? collection.name
     : params.slug.replace(/-/g, " ");
+
+  // Find parent collection for breadcrumb
+  const parentCollection = useMemo(
+    () =>
+      collection?.parent_id
+        ? collections.find((c) => c.id === collection.parent_id)
+        : null,
+    [collection, collections]
+  );
 
   const handleSortChange = useCallback((sortBy: LinkSortField, sortDir: SortDirection) => {
     setFilters({ sort_by: sortBy, sort_dir: sortDir });
@@ -97,12 +107,30 @@ export default function CollectionPage({
   }, [bulkMove, selectedIds]);
 
   return (
-    <div>
+    <div className="animate-fade-in">
       {/* Collection header */}
       <div className="mb-8">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="editorial-label text-paper-faint mb-1">Collection</p>
+            {/* Breadcrumb for sub-collections */}
+            {parentCollection ? (
+              <div className="flex items-center gap-1.5 mb-1">
+                <Link
+                  href={`/collection/${parentCollection.slug}`}
+                  className="editorial-label text-paper-faint hover:text-paper-muted transition-colors"
+                >
+                  {parentCollection.emoji} {parentCollection.name}
+                </Link>
+                <svg className="w-3 h-3 text-paper-faint" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+                <span className="editorial-label text-paper-muted">
+                  {collection?.emoji} {displayName}
+                </span>
+              </div>
+            ) : (
+              <p className="editorial-label text-paper-faint mb-1">Collection</p>
+            )}
             <div className="flex items-center gap-3">
               {collection && (
                 <span className="text-2xl">{collection.emoji}</span>

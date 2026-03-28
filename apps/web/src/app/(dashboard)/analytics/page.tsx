@@ -100,7 +100,7 @@ export default function AnalyticsPage() {
   const maxActivity = Math.max(...data.activity.map((a) => a.count), 1);
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto animate-fade-in">
       {/* Header */}
       <div className="mb-8">
         <p className="editorial-label text-paper-faint mb-1">Insights</p>

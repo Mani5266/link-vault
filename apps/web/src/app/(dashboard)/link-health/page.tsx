@@ -116,7 +116,7 @@ export default function LinkHealthPage() {
   }, [results, activeTab]);
 
   return (
-    <div>
+    <div className="animate-fade-in">
       {/* Page header */}
       <div className="mb-8">
         <div className="flex items-center justify-between gap-4">

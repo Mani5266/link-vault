@@ -78,7 +78,7 @@ export default function DashboardPage() {
   }, [bulkMove, selectedIds]);
 
   return (
-    <div>
+    <div className="animate-fade-in">
       {/* Page header */}
       <div className="mb-8">
         <div className="flex items-center justify-between gap-4">

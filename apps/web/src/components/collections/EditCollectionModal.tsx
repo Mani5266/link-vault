@@ -26,11 +26,12 @@ interface EditCollectionModalProps {
 
 export function EditCollectionModal({ collection, onClose }: EditCollectionModalProps) {
   const { accessToken } = useAuthStore();
-  const { updateCollection } = useCollectionStore();
+  const { updateCollection, collections } = useCollectionStore();
   const toast = useToast();
 
   const [name, setName] = useState("");
   const [emoji, setEmoji] = useState("\u{1F4C1}");
+  const [parentId, setParentId] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,11 +39,22 @@ export function EditCollectionModal({ collection, onClose }: EditCollectionModal
   const inputRef = useRef<HTMLInputElement>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
 
+  // Check if this collection has children (cannot become a sub-collection)
+  const hasChildren = collection
+    ? collections.some((c) => c.parent_id === collection.id)
+    : false;
+
+  // Available parent options: top-level collections (excluding self)
+  const parentOptions = collections.filter(
+    (c) => !c.parent_id && c.id !== collection?.id && !c.is_default
+  );
+
   // Populate fields when collection changes
   useEffect(() => {
     if (collection) {
       setName(collection.name);
       setEmoji(collection.emoji);
+      setParentId(collection.parent_id);
       setShowEmojiPicker(false);
       setError(null);
       setIsSubmitting(false);
@@ -81,7 +93,8 @@ export function EditCollectionModal({ collection, onClose }: EditCollectionModal
     }
 
     // Check if anything actually changed
-    if (trimmed === collection.name && emoji === collection.emoji) {
+    const parentChanged = parentId !== collection.parent_id;
+    if (trimmed === collection.name && emoji === collection.emoji && !parentChanged) {
       onClose();
       return;
     }
@@ -90,9 +103,10 @@ export function EditCollectionModal({ collection, onClose }: EditCollectionModal
       setError(null);
       setIsSubmitting(true);
 
-      const body: Record<string, string> = {};
+      const body: Record<string, unknown> = {};
       if (trimmed !== collection.name) body.name = trimmed;
       if (emoji !== collection.emoji) body.emoji = emoji;
+      if (parentChanged) body.parent_id = parentId;
 
       const response = await apiClient.patch<ApiResponse<Collection>>(
         `/collections/${collection.id}`,
@@ -206,6 +220,34 @@ export function EditCollectionModal({ collection, onClose }: EditCollectionModal
                   </button>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Parent collection dropdown (re-parent) */}
+          {!collection.is_default && parentOptions.length > 0 && (
+            <div>
+              <label className="editorial-label text-paper-dim mb-2 block">
+                Parent Collection
+              </label>
+              {hasChildren ? (
+                <p className="text-xs text-paper-faint">
+                  Cannot move — this collection has sub-collections.
+                </p>
+              ) : (
+                <select
+                  value={parentId || ""}
+                  onChange={(e) => setParentId(e.target.value || null)}
+                  disabled={isSubmitting}
+                  className="w-full input-editorial text-sm"
+                >
+                  <option value="">None (top-level)</option>
+                  {parentOptions.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.emoji} {c.name}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
           )}
 
