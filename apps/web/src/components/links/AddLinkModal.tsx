@@ -17,6 +17,7 @@ import type { Link, ApiResponse } from "@linkvault/shared";
 // ============================================================
 
 type AIStep = "idle" | "saving" | "analyzing" | "done" | "error";
+type ErrorKind = "save" | "ai";
 
 export function AddLinkModal() {
   const { isAddLinkModalOpen, setAddLinkModalOpen } = useUIStore();
@@ -37,6 +38,7 @@ export function AddLinkModal() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [aiStep, setAiStep] = useState<AIStep>("idle");
+  const [errorKind, setErrorKind] = useState<ErrorKind>("save");
   const [savedLink, setSavedLink] = useState<Link | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -52,6 +54,7 @@ export function AddLinkModal() {
       setCollectionId(null);
       setError(null);
       setAiStep("idle");
+      setErrorKind("save");
       setIsSubmitting(false);
       setSavedLink(null);
       resetAI();
@@ -115,6 +118,7 @@ export function AddLinkModal() {
       clearTimeout(analyzeTimer);
       const msg = err instanceof ApiError ? err.message : "Failed to save link. Please try again.";
       setError(msg);
+      setErrorKind("save");
       setAiStep("error");
       toast.error(msg);
     } finally {
@@ -238,6 +242,7 @@ export function AddLinkModal() {
           {/* AI Processing Status */}
           <AIStatusIndicator
             step={aiStep}
+            errorKind={errorKind}
             savedLink={savedLink}
             tagSuggestions={visibleSuggestions}
             tagSuggestionsLoading={tagSuggestionsLoading}
@@ -289,6 +294,7 @@ export function AddLinkModal() {
 
 interface AIStatusProps {
   step: AIStep;
+  errorKind: ErrorKind;
   savedLink: Link | null;
   tagSuggestions: string[];
   tagSuggestionsLoading: boolean;
@@ -298,6 +304,7 @@ interface AIStatusProps {
 
 function AIStatusIndicator({
   step,
+  errorKind,
   savedLink,
   tagSuggestions,
   tagSuggestionsLoading,
@@ -330,7 +337,9 @@ function AIStatusIndicator({
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
         </svg>
         <span className="text-xs text-danger font-body">
-          AI analysis failed. The link was saved with basic metadata.
+          {errorKind === "ai"
+            ? "AI analysis failed. The link was saved with basic metadata."
+            : "Failed to save link. Please check the URL and try again."}
         </span>
       </div>
     );
