@@ -25,6 +25,8 @@ export interface Link {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  deadline_at: string | null;
+  deadline_label: string | null;
 }
 
 export interface LinkInput {
@@ -42,6 +44,8 @@ export interface LinkUpdate {
   is_pinned?: boolean;
   reading_status?: ReadingStatus | null;
   read_at?: string | null;
+  deadline_at?: string | null;
+  deadline_label?: string | null;
 }
 
 export interface LinkWithCollection extends Link {
@@ -82,6 +86,7 @@ export interface LinkFilters {
   page?: number;
   limit?: number;
   deleted?: boolean;
+  has_deadline?: boolean;
 }
 
 // ============================================================

@@ -87,6 +87,9 @@ export function useLinks(options: UseLinksOptions = {}) {
       if (filters.deleted) {
         params.set("deleted", "true");
       }
+      if (filters.has_deadline) {
+        params.set("has_deadline", "true");
+      }
       params.set("page", String(page));
       if (filters.limit) {
         params.set("limit", String(filters.limit));
@@ -103,6 +106,7 @@ export function useLinks(options: UseLinksOptions = {}) {
       filters.is_pinned,
       filters.reading_status,
       filters.deleted,
+      filters.has_deadline,
       filters.limit,
     ]
   );

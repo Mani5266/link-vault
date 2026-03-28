@@ -34,7 +34,9 @@ Your task: Generate a JSON response with these fields:
   "description": "A 2-3 sentence summary that tells the user WHAT the content covers, the KEY takeaways or details, and WHY it's useful. Be specific: include names, numbers, steps, ingredients, prices, or key findings when available. (max 400 chars)",
   "tags": ["tag1", "tag2", "tag3", "tag4"],
   "category": "video|article|recipe|product|tutorial|social|tool|news|music|podcast|other",
-  "emoji": "A single emoji that visually represents the specific content"
+  "emoji": "A single emoji that visually represents the specific content",
+  "deadline_at": "ISO 8601 date string if the page mentions a deadline, expiration, due date, closing date, end date, or time-limited offer. null if none found.",
+  "deadline_label": "A short human-readable label describing the deadline (e.g. 'Application deadline', 'Sale ends', 'Registration closes', 'Early bird ends', 'Event date'). null if no deadline."
 }
 
 Quality rules for title:
@@ -57,6 +59,8 @@ Other rules:
 - For recipes, mention key ingredients and cooking time.
 - For tutorials, list what the reader will learn.
 - For news articles, state the key facts/developments.
+- For deadline_at: Look for any dates related to deadlines, expirations, application closing dates, sale end dates, event dates, registration deadlines, early-bird cutoffs, etc. Convert to ISO 8601 format (YYYY-MM-DDTHH:mm:ssZ). If only a date is mentioned with no time, use end-of-day (23:59:59Z). If no deadline is found, set to null.
+- For deadline_label: Provide a short (2-4 word) label describing what the deadline is for. If no deadline, set to null.
 - ALWAYS return valid JSON. No markdown, no explanation — just the JSON object.`;
 
 // ============================================================
@@ -189,6 +193,8 @@ export class AIService {
         tags: (parsed.tags || []).slice(0, 5),
         category: parsed.category,
         emoji: parsed.emoji || "🔗",
+        deadline_at: parsed.deadline_at || null,
+        deadline_label: parsed.deadline_label ? parsed.deadline_label.slice(0, 100) : null,
       };
     } catch (error) {
       logger.error({ error, url }, "AI summarization failed");
@@ -294,6 +300,8 @@ export class AIService {
       tags,
       category: isSocial ? "social" : "other",
       emoji: isSocial ? "📱" : "🔗",
+      deadline_at: null,
+      deadline_label: null,
     };
   }
 

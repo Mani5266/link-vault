@@ -40,6 +40,8 @@ export function EditLinkModal({ link, onClose }: EditLinkModalProps) {
   const [tagsInput, setTagsInput] = useState("");
   const [category, setCategory] = useState("");
   const [emoji, setEmoji] = useState("");
+  const [deadlineAt, setDeadlineAt] = useState("");
+  const [deadlineLabel, setDeadlineLabel] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -54,6 +56,8 @@ export function EditLinkModal({ link, onClose }: EditLinkModalProps) {
       setTagsInput(link.tags.join(", "));
       setCategory(link.category || "");
       setEmoji(link.emoji || "");
+      setDeadlineAt(link.deadline_at ? link.deadline_at.slice(0, 16) : "");
+      setDeadlineLabel(link.deadline_label || "");
       setError(null);
       setIsSubmitting(false);
       resetAI();
@@ -136,6 +140,15 @@ export function EditLinkModal({ link, onClose }: EditLinkModalProps) {
 
     if (category !== (link.category || "")) updates.category = category as any;
     if (emoji !== (link.emoji || "")) updates.emoji = emoji;
+
+    // Deadline fields
+    const origDeadline = link.deadline_at ? link.deadline_at.slice(0, 16) : "";
+    if (deadlineAt !== origDeadline) {
+      updates.deadline_at = deadlineAt ? new Date(deadlineAt).toISOString() : null;
+    }
+    if (deadlineLabel !== (link.deadline_label || "")) {
+      updates.deadline_label = deadlineLabel || null;
+    }
 
     // Nothing changed
     if (Object.keys(updates).length === 0) {
@@ -377,6 +390,47 @@ export function EditLinkModal({ link, onClose }: EditLinkModalProps) {
               />
             </div>
           </div>
+
+          {/* Deadline */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="edit-deadline" className="editorial-label text-paper-dim mb-2 block">
+                Deadline
+              </label>
+              <input
+                id="edit-deadline"
+                type="datetime-local"
+                value={deadlineAt}
+                onChange={(e) => setDeadlineAt(e.target.value)}
+                disabled={isSubmitting}
+                className="input-editorial"
+              />
+            </div>
+            <div>
+              <label htmlFor="edit-deadline-label" className="editorial-label text-paper-dim mb-2 block">
+                Deadline Label
+              </label>
+              <input
+                id="edit-deadline-label"
+                type="text"
+                value={deadlineLabel}
+                onChange={(e) => setDeadlineLabel(e.target.value)}
+                disabled={isSubmitting}
+                maxLength={100}
+                className="input-editorial"
+                placeholder="e.g. Application closes"
+              />
+            </div>
+          </div>
+          {deadlineAt && (
+            <button
+              type="button"
+              onClick={() => { setDeadlineAt(""); setDeadlineLabel(""); }}
+              className="text-xs text-paper-faint hover:text-danger transition-colors font-body -mt-2"
+            >
+              Clear deadline
+            </button>
+          )}
 
           {/* Error */}
           {error && <p className="text-sm text-danger font-body">{error}</p>}

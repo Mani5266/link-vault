@@ -13,6 +13,8 @@ export interface AISummaryResponse {
   tags: string[];
   category: string;
   emoji: string;
+  deadline_at: string | null;
+  deadline_label: string | null;
 }
 
 export interface AITagSuggestionRequest {

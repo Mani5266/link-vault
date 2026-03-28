@@ -29,6 +29,7 @@ export function EmptyState({
   const isFavorites = context === "favorites";
   const isRecent = context === "recent";
   const isTrash = context === "trash";
+  const isDeadlines = context === "deadlines";
 
   // Search-specific empty state
   if (searchQuery) {
@@ -62,7 +63,7 @@ export function EmptyState({
 
       {/* Section label */}
       <p className="editorial-label text-paper-faint mb-6">
-        {isAll ? "Your Vault" : isReadingQueue ? "Reading Queue" : isFavorites ? "Favorites" : isRecent ? "Recent" : isTrash ? "Trash" : context}
+        {isAll ? "Your Vault" : isReadingQueue ? "Reading Queue" : isFavorites ? "Favorites" : isRecent ? "Recent" : isTrash ? "Trash" : isDeadlines ? "Deadlines" : context}
       </p>
 
       {/* Emoji — only for collections and special pages */}
@@ -81,9 +82,11 @@ export function EmptyState({
                 ? "No favorites yet"
                 : isRecent
                   ? "No recent links"
-                  : isTrash
+                   : isTrash
                     ? "Trash is empty"
-                    : "No links yet"}
+                    : isDeadlines
+                      ? "No deadlines yet"
+                      : "No links yet"}
       </h2>
 
       <p className="text-sm text-paper-dim max-w-sm mb-10 leading-relaxed">
@@ -117,6 +120,12 @@ export function EmptyState({
             Deleted links will appear here for 30 days before being
             permanently removed.
           </>
+        ) : isDeadlines ? (
+          <>
+            When you save links with time-sensitive content, AI will
+            automatically detect deadlines. You can also set deadlines
+            manually from the edit modal.
+          </>
         ) : (
           <>
             Save a link and assign it to{" "}
@@ -149,7 +158,7 @@ export function EmptyState({
         </div>
       )}
 
-      {onAddLink && !isReadingQueue && !isFavorites && !isTrash && (
+      {onAddLink && !isReadingQueue && !isFavorites && !isTrash && !isDeadlines && (
         <button
           onClick={onAddLink}
           className="btn-primary"

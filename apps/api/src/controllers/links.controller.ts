@@ -112,6 +112,8 @@ export class LinksController {
             emoji: aiResult.emoji,
             ai_processed: true,
             processing_status: "complete",
+            deadline_at: aiResult.deadline_at || null,
+            deadline_label: aiResult.deadline_label || null,
           };
 
           const updatedLink = await LinkService.updateLink(userId, link.id, updateData as any);

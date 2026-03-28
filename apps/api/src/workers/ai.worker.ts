@@ -52,6 +52,8 @@ async function processAIJob(job: Job<AIProcessingJobData>): Promise<void> {
       emoji: aiResult.emoji,
       ai_processed: true,
       processing_status: "complete",
+      deadline_at: aiResult.deadline_at || null,
+      deadline_label: aiResult.deadline_label || null,
       updated_at: new Date().toISOString(),
     };
 

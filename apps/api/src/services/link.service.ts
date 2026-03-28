@@ -24,6 +24,7 @@ export class LinkService {
       page = 1,
       limit = LIMITS.DEFAULT_PAGE_SIZE,
       deleted,
+      has_deadline,
     } = filters;
 
     let query = supabaseAdmin
@@ -52,6 +53,10 @@ export class LinkService {
 
     if (reading_status) {
       query = query.eq("reading_status", reading_status);
+    }
+
+    if (has_deadline) {
+      query = query.not("deadline_at", "is", null);
     }
 
     if (search) {

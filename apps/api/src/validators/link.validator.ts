@@ -28,6 +28,8 @@ export const updateLinkSchema = z.object({
   is_pinned: z.boolean().optional(),
   reading_status: z.enum(["unread", "read"]).nullable().optional(),
   read_at: z.string().nullable().optional(),
+  deadline_at: z.string().nullable().optional(),
+  deadline_label: z.string().max(100).nullable().optional(),
 });
 
 export const bulkDeleteSchema = z.object({
@@ -61,6 +63,10 @@ export const linkQuerySchema = z.object({
     .pipe(z.number().int().positive().max(LIMITS.MAX_PAGE_SIZE))
     .optional(),
   deleted: z
+    .string()
+    .transform((val) => val === "true")
+    .optional(),
+  has_deadline: z
     .string()
     .transform((val) => val === "true")
     .optional(),
