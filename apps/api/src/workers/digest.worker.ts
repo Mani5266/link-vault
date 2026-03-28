@@ -117,27 +117,39 @@ async function generateForAllUsers(days: number): Promise<void> {
   const since = new Date();
   since.setDate(since.getDate() - days);
 
-  // Find users who have saved links in the period
-  const { data: users, error } = await supabaseAdmin
-    .from("links")
-    .select("user_id")
-    .gte("created_at", since.toISOString())
-    .limit(1000);
+  // Paginate through users who have saved links in the period
+  const PAGE_SIZE = 500;
+  const allUserIds = new Set<string>();
+  let offset = 0;
 
-  if (error || !users) {
-    logger.error({ error }, "Failed to find users for digest");
-    return;
+  while (true) {
+    const { data, error } = await supabaseAdmin
+      .from("links")
+      .select("user_id")
+      .gte("created_at", since.toISOString())
+      .range(offset, offset + PAGE_SIZE - 1);
+
+    if (error || !data || data.length === 0) break;
+
+    for (const row of data) {
+      allUserIds.add(row.user_id);
+    }
+
+    if (data.length < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
   }
 
-  const uniqueUserIds = [...new Set(users.map((u: any) => u.user_id))];
+  const uniqueUserIds = Array.from(allUserIds);
   logger.info({ userCount: uniqueUserIds.length }, "Generating digests for active users");
 
   const queue = getDigestQueue();
   if (!queue) return;
 
-  // Enqueue individual digest jobs
+  // Enqueue individual digest jobs with deduplication
   for (const userId of uniqueUserIds) {
-    await queue.add("user-digest", { userId, days });
+    await queue.add("user-digest", { userId, days }, {
+      jobId: `digest-${userId}-${new Date().toISOString().slice(0, 10)}`, // One digest per user per day
+    });
   }
 }
 

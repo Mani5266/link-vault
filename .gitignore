@@ -23,6 +23,7 @@ build/
 .env.production.local
 apps/api/.env
 apps/web/.env.local
+apps/extension/config.json
 
 # ============================================================
 # IDE & Editor

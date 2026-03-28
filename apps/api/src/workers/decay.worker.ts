@@ -87,11 +87,12 @@ async function processDecayScan(job: Job<DecayScanJobData>): Promise<void> {
 
   logger.info({ userId, jobId: job.id }, "Running decay scan");
 
-  // Fetch all user links
+  // Fetch user links (capped at 5000 to avoid memory issues)
   const { data: links, error } = await supabaseAdmin
     .from("links")
     .select("id, created_at, category, reading_status, is_pinned")
-    .eq("user_id", userId);
+    .eq("user_id", userId)
+    .limit(5000);
 
   if (error || !links) {
     logger.error({ error }, "Failed to fetch links for decay scan");
@@ -128,23 +129,16 @@ async function processDecayScan(job: Job<DecayScanJobData>): Promise<void> {
 
   if (scores.length === 0) return;
 
-  // Upsert decay scores (replace existing for this user)
-  // Delete old scores first, then insert new
-  await supabaseAdmin
-    .from("content_decay_scores")
-    .delete()
-    .eq("user_id", userId);
-
-  // Insert in batches
+  // Upsert decay scores in batches (avoids delete+insert race condition)
   const BATCH = 100;
   for (let i = 0; i < scores.length; i += BATCH) {
     const batch = scores.slice(i, i + BATCH);
-    const { error: insertError } = await supabaseAdmin
+    const { error: upsertError } = await supabaseAdmin
       .from("content_decay_scores")
-      .insert(batch);
+      .upsert(batch, { onConflict: "link_id" });
 
-    if (insertError) {
-      logger.error({ insertError, batch: i }, "Failed to insert decay scores batch");
+    if (upsertError) {
+      logger.error({ upsertError, batch: i }, "Failed to upsert decay scores batch");
     }
   }
 
@@ -221,18 +215,28 @@ export function startDecayWorker(): Worker<DecayScanJobData> | null {
 }
 
 async function scanAllUsers(): Promise<void> {
-  // Find all distinct user_ids who have links
-  const { data, error } = await supabaseAdmin
-    .from("links")
-    .select("user_id")
-    .limit(1000);
+  // Paginate through distinct user_ids who have links
+  const PAGE_SIZE = 500;
+  const allUserIds = new Set<string>();
+  let offset = 0;
 
-  if (error || !data) {
-    logger.error({ error }, "Failed to find users for decay scan");
-    return;
+  while (true) {
+    const { data, error } = await supabaseAdmin
+      .from("links")
+      .select("user_id")
+      .range(offset, offset + PAGE_SIZE - 1);
+
+    if (error || !data || data.length === 0) break;
+
+    for (const row of data) {
+      allUserIds.add(row.user_id);
+    }
+
+    if (data.length < PAGE_SIZE) break;
+    offset += PAGE_SIZE;
   }
 
-  const uniqueUserIds = [...new Set(data.map((u: any) => u.user_id))];
+  const uniqueUserIds = Array.from(allUserIds);
   logger.info({ userCount: uniqueUserIds.length }, "Running decay scans for all users");
 
   const queue = getDecayScanQueue();

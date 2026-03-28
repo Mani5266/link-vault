@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "../config/supabase";
 import { logger } from "../utils/logger";
+import { escapePostgrestValue, escapePostgrestIlike } from "../utils/sanitize";
 import type {
   SmartCollection,
   SmartCollectionInput,
@@ -154,6 +155,8 @@ export class SmartCollectionService {
 
     if (countOnly) {
       query = query.limit(0);
+    } else {
+      query = query.limit(500); // Cap results to prevent unbounded queries
     }
 
     const { data, count, error } = await query;
@@ -197,6 +200,8 @@ export class SmartCollectionService {
 
     if (countOnly) {
       query = query.limit(0);
+    } else {
+      query = query.limit(500); // Cap results to prevent unbounded queries
     }
 
     const { data, count, error } = await query;
@@ -215,24 +220,25 @@ export class SmartCollectionService {
   /** Apply a single rule as a chained filter (for AND mode). */
   private static applyRule(query: any, rule: SmartCollectionRule): any {
     const { field, operator, value } = rule;
+    const safeValue = escapePostgrestValue(value);
 
     switch (field) {
       case "category":
         if (operator === "equals") return query.eq("category", value);
         if (operator === "not_equals") return query.neq("category", value);
-        return query.ilike("category", `%${value}%`);
+        return query.ilike("category", `%${escapePostgrestIlike(value)}%`);
 
       case "domain":
         if (operator === "equals") return query.eq("domain", value);
         if (operator === "not_equals") return query.neq("domain", value);
-        return query.ilike("domain", `%${value}%`);
+        return query.ilike("domain", `%${escapePostgrestIlike(value)}%`);
 
       case "tag":
         if (operator === "equals" || operator === "contains") {
           return query.contains("tags", [value]);
         }
         // not_equals: doesn't contain this tag — negate via not
-        return query.not("tags", "cs", `{${value}}`);
+        return query.not("tags", "cs", `{${safeValue}}`);
 
       case "is_pinned":
         return query.eq("is_pinned", value === "true");
@@ -250,30 +256,32 @@ export class SmartCollectionService {
   /** Convert a rule to a PostgREST OR filter string. */
   private static ruleToOrFilter(rule: SmartCollectionRule): string | null {
     const { field, operator, value } = rule;
+    const safeValue = escapePostgrestValue(value);
+    const safeIlike = escapePostgrestIlike(value);
 
     switch (field) {
       case "category":
-        if (operator === "equals") return `category.eq.${value}`;
-        if (operator === "not_equals") return `category.neq.${value}`;
-        return `category.ilike.%${value}%`;
+        if (operator === "equals") return `category.eq.${safeValue}`;
+        if (operator === "not_equals") return `category.neq.${safeValue}`;
+        return `category.ilike.%${safeIlike}%`;
 
       case "domain":
-        if (operator === "equals") return `domain.eq.${value}`;
-        if (operator === "not_equals") return `domain.neq.${value}`;
-        return `domain.ilike.%${value}%`;
+        if (operator === "equals") return `domain.eq.${safeValue}`;
+        if (operator === "not_equals") return `domain.neq.${safeValue}`;
+        return `domain.ilike.%${safeIlike}%`;
 
       case "tag":
         if (operator === "equals" || operator === "contains") {
-          return `tags.cs.{${value}}`;
+          return `tags.cs.{${safeValue}}`;
         }
         return null; // NOT in OR mode is complex, skip
 
       case "is_pinned":
-        return `is_pinned.eq.${value}`;
+        return `is_pinned.eq.${value === "true"}`;
 
       case "reading_status":
-        if (operator === "equals") return `reading_status.eq.${value}`;
-        if (operator === "not_equals") return `reading_status.neq.${value}`;
+        if (operator === "equals") return `reading_status.eq.${safeValue}`;
+        if (operator === "not_equals") return `reading_status.neq.${safeValue}`;
         return null;
 
       default:

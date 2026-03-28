@@ -21,6 +21,19 @@ async function processAIJob(job: Job<AIProcessingJobData>): Promise<void> {
   logger.info({ linkId, url, jobId: job.id }, "Processing AI job");
 
   try {
+    // Verify the link actually belongs to this user before processing
+    const { data: linkRow, error: verifyError } = await supabaseAdmin
+      .from("links")
+      .select("id")
+      .eq("id", linkId)
+      .eq("user_id", userId)
+      .single();
+
+    if (verifyError || !linkRow) {
+      logger.warn({ linkId, userId }, "AI job skipped — link not found or not owned by user");
+      return;
+    }
+
     // Mark link as processing
     await supabaseAdmin
       .from("links")

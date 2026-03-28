@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "../config/supabase";
 import { normalizeUrl, extractDomain, getFaviconUrl } from "@linkvault/shared";
 import { logger } from "../utils/logger";
+import { escapePostgrestIlike } from "../utils/sanitize";
 import type { Link, LinkFilters, BookmarkImportItem, BookmarkImportResult, ExportableLink } from "@linkvault/shared";
 import { LIMITS } from "@linkvault/shared";
 
@@ -60,8 +61,10 @@ export class LinkService {
       } else {
         // For very short queries (1-2 chars), fall back to ILIKE
         // since tsvector doesn't handle partial single-character matches.
+        // Escape special chars to prevent PostgREST filter injection.
+        const escaped = escapePostgrestIlike(trimmed);
         query = query.or(
-          `title.ilike.%${trimmed}%,description.ilike.%${trimmed}%,domain.ilike.%${trimmed}%`
+          `title.ilike.%${escaped}%,description.ilike.%${escaped}%,domain.ilike.%${escaped}%`
         );
       }
     }

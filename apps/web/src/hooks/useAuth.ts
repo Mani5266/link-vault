@@ -82,8 +82,8 @@ export function useAuth() {
       } else {
         setAuth(null, null);
       }
-    } catch (error) {
-      console.error("Failed to initialize auth:", error);
+    } catch {
+      // Auth initialization failed — clear state
       setAuth(null, null);
     } finally {
       initDone.current = true;

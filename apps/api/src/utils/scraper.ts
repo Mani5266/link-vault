@@ -6,6 +6,7 @@
 
 import * as cheerio from "cheerio";
 import { logger } from "./logger";
+import { validateUrlForFetch } from "./ssrf";
 
 export interface ScrapedMetadata {
   /** <title> tag content */
@@ -48,6 +49,9 @@ export interface ScrapedMetadata {
  */
 export async function scrapeUrl(url: string): Promise<ScrapedMetadata | null> {
   try {
+    // SSRF protection: validate URL before fetching
+    await validateUrlForFetch(url);
+
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
 

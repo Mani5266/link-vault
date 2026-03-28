@@ -79,24 +79,46 @@ function setLoginError(message) {
 
 // ============================================================
 // Storage Helpers
+// Use session storage for sensitive tokens (cleared on browser close)
+// Use local storage for config (persists across sessions)
 // ============================================================
 
 async function getStored(key) {
+  // Tokens use session storage; config uses local storage
+  const isToken = key === CONFIG_KEYS.ACCESS_TOKEN || key === CONFIG_KEYS.REFRESH_TOKEN;
+  const storage = isToken ? chrome.storage.session : chrome.storage.local;
   return new Promise((resolve) => {
-    chrome.storage.local.get(key, (result) => resolve(result[key] || null));
+    storage.get(key, (result) => resolve(result[key] || null));
   });
 }
 
 async function setStored(obj) {
-  return new Promise((resolve) => {
-    chrome.storage.local.set(obj, resolve);
-  });
+  // Split token keys into session storage and config keys into local storage
+  const sessionKeys = {};
+  const localKeys = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (key === CONFIG_KEYS.ACCESS_TOKEN || key === CONFIG_KEYS.REFRESH_TOKEN) {
+      sessionKeys[key] = value;
+    } else {
+      localKeys[key] = value;
+    }
+  }
+  const promises = [];
+  if (Object.keys(sessionKeys).length > 0) {
+    promises.push(new Promise((resolve) => chrome.storage.session.set(sessionKeys, resolve)));
+  }
+  if (Object.keys(localKeys).length > 0) {
+    promises.push(new Promise((resolve) => chrome.storage.local.set(localKeys, resolve)));
+  }
+  await Promise.all(promises);
 }
 
 async function removeStored(keys) {
-  return new Promise((resolve) => {
-    chrome.storage.local.remove(keys, resolve);
-  });
+  // Remove from both storages to be safe
+  await Promise.all([
+    new Promise((resolve) => chrome.storage.session.remove(keys, resolve)),
+    new Promise((resolve) => chrome.storage.local.remove(keys, resolve)),
+  ]);
 }
 
 // ============================================================
@@ -180,6 +202,7 @@ async function apiRequest(endpoint, options = {}) {
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
+      "X-Requested-With": "XMLHttpRequest",
     },
   };
 

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { ApiResponse } from "../utils/apiResponse";
 import { logger } from "../utils/logger";
 import { supabaseAdmin } from "../config/supabase";
+import { getValidUUIDParam } from "../utils/validate";
 
 export class NotesController {
   /**
@@ -10,9 +11,11 @@ export class NotesController {
   static async getNotes(req: Request, res: Response) {
     try {
       const userId = (req as any).user.id;
-      const linkId = Array.isArray(req.params.linkId)
-        ? req.params.linkId[0]
-        : req.params.linkId;
+      const linkId = getValidUUIDParam(req.params.linkId);
+      if (!linkId) {
+        ApiResponse.badRequest(res, "Invalid link ID");
+        return;
+      }
 
       const { data, error } = await supabaseAdmin
         .from("link_notes")
@@ -30,7 +33,7 @@ export class NotesController {
       ApiResponse.success(res, data || []);
     } catch (error: any) {
       logger.error({ error }, "Failed to get notes");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to fetch notes");
     }
   }
 
@@ -40,13 +43,21 @@ export class NotesController {
   static async createNote(req: Request, res: Response) {
     try {
       const userId = (req as any).user.id;
-      const linkId = Array.isArray(req.params.linkId)
-        ? req.params.linkId[0]
-        : req.params.linkId;
+      const linkId = getValidUUIDParam(req.params.linkId);
+      if (!linkId) {
+        ApiResponse.badRequest(res, "Invalid link ID");
+        return;
+      }
       const { content } = req.body;
 
       if (!content || typeof content !== "string" || !content.trim()) {
         ApiResponse.badRequest(res, "Note content is required");
+        return;
+      }
+
+      // Content length validation
+      if (content.trim().length > 10000) {
+        ApiResponse.badRequest(res, "Note content must be under 10,000 characters");
         return;
       }
 
@@ -76,7 +87,7 @@ export class NotesController {
       ApiResponse.created(res, data, "Note created");
     } catch (error: any) {
       logger.error({ error }, "Failed to create note");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to create note");
     }
   }
 
@@ -86,13 +97,21 @@ export class NotesController {
   static async updateNote(req: Request, res: Response) {
     try {
       const userId = (req as any).user.id;
-      const noteId = Array.isArray(req.params.noteId)
-        ? req.params.noteId[0]
-        : req.params.noteId;
+      const noteId = getValidUUIDParam(req.params.noteId);
+      if (!noteId) {
+        ApiResponse.badRequest(res, "Invalid note ID");
+        return;
+      }
       const { content } = req.body;
 
       if (!content || typeof content !== "string" || !content.trim()) {
         ApiResponse.badRequest(res, "Note content is required");
+        return;
+      }
+
+      // Content length validation
+      if (content.trim().length > 10000) {
+        ApiResponse.badRequest(res, "Note content must be under 10,000 characters");
         return;
       }
 
@@ -116,7 +135,7 @@ export class NotesController {
       ApiResponse.success(res, data, "Note updated");
     } catch (error: any) {
       logger.error({ error }, "Failed to update note");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to update note");
     }
   }
 
@@ -126,12 +145,12 @@ export class NotesController {
   static async deleteNote(req: Request, res: Response) {
     try {
       const userId = (req as any).user.id;
-      const linkId = Array.isArray(req.params.linkId)
-        ? req.params.linkId[0]
-        : req.params.linkId;
-      const noteId = Array.isArray(req.params.noteId)
-        ? req.params.noteId[0]
-        : req.params.noteId;
+      const linkId = getValidUUIDParam(req.params.linkId);
+      const noteId = getValidUUIDParam(req.params.noteId);
+      if (!linkId || !noteId) {
+        ApiResponse.badRequest(res, "Invalid link or note ID");
+        return;
+      }
 
       const { error } = await supabaseAdmin
         .from("link_notes")
@@ -155,7 +174,7 @@ export class NotesController {
       ApiResponse.success(res, null, "Note deleted");
     } catch (error: any) {
       logger.error({ error }, "Failed to delete note");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to delete note");
     }
   }
 }

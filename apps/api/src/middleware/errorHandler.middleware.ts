@@ -26,14 +26,14 @@ export function errorHandler(
   Sentry.captureException(err);
 
   const statusCode = (err as any).statusCode || 500;
-  const message =
-    process.env.NODE_ENV === "production"
-      ? "Internal Server Error"
-      : err.message;
+  // Always return generic message — never leak error details to clients
+  const message = statusCode < 500
+    ? err.message // Client errors (4xx) are typically safe to expose
+    : "Internal Server Error";
 
   res.status(statusCode).json({
     success: false,
-    error: err.name || "Internal Server Error",
+    error: statusCode < 500 ? (err.name || "Error") : "Internal Server Error",
     message,
     statusCode,
   });

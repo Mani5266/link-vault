@@ -35,8 +35,7 @@ export function useSetup() {
         if (response.success && response.data) {
           setCollections(response.data);
         }
-      } catch (error) {
-        console.error("Account setup failed:", error);
+      } catch {
         // Non-critical — app still works, just no collections loaded
       } finally {
         setLoading(false);

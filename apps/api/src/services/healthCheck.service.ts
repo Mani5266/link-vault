@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "../config/supabase";
 import { logger } from "../utils/logger";
+import { isObviouslyUnsafeUrl } from "../utils/ssrf";
 import type { Link, LinkHealthResult, LinkHealthStatus } from "@linkvault/shared";
 
 // ============================================================
@@ -8,6 +9,7 @@ import type { Link, LinkHealthResult, LinkHealthStatus } from "@linkvault/shared
 
 const REQUEST_TIMEOUT_MS = 10_000;
 const CONCURRENCY_LIMIT = 10;
+const MAX_LINKS_PER_SCAN = 500; // Cap to prevent DoS via amplification
 
 export class HealthCheckService {
   /**
@@ -15,12 +17,13 @@ export class HealthCheckService {
    * Uses HEAD requests with GET fallback. Runs in batches of CONCURRENCY_LIMIT.
    */
   static async checkAll(userId: string): Promise<LinkHealthResult[]> {
-    // Fetch all user links (no pagination — we need all of them)
+    // Fetch user links with limit to prevent amplified DoS
     const { data: links, error } = await supabaseAdmin
       .from("links")
       .select("id, url, title, domain, favicon_url")
       .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(MAX_LINKS_PER_SCAN);
 
     if (error) {
       logger.error({ error }, "Failed to fetch links for health check");
@@ -53,6 +56,21 @@ export class HealthCheckService {
     const start = Date.now();
 
     try {
+      // SSRF protection: skip private/internal URLs
+      if (isObviouslyUnsafeUrl(link.url)) {
+        return {
+          link_id: link.id,
+          url: link.url,
+          title: link.title,
+          domain: link.domain,
+          favicon_url: link.favicon_url,
+          status: "error" as LinkHealthStatus,
+          http_code: null,
+          error: "URL points to an internal address",
+          response_time_ms: 0,
+        };
+      }
+
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 

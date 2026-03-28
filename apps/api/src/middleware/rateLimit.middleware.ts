@@ -18,8 +18,11 @@ export const aiRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => {
-    // Rate limit per user (using their user ID from auth)
-    return (req as any).user?.id || req.ip || "anonymous";
+    // Rate limit per user (using their user ID from auth).
+    // Require user.id — reject anonymous to prevent bypass.
+    const userId = (req as any).user?.id;
+    if (!userId) return req.ip || "unknown";
+    return userId;
   },
 });
 
@@ -55,6 +58,66 @@ export const importRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => {
-    return (req as any).user?.id || req.ip || "anonymous";
+    return (req as any).user?.id || req.ip || "unknown";
+  },
+});
+
+/**
+ * Rate limiter for link health scan.
+ * Each scan triggers up to 500 outbound HTTP requests — limit to 1 per 10 min.
+ */
+export const healthScanRateLimiter = rateLimit({
+  windowMs: 10 * 60_000, // 10 minutes
+  max: 1,
+  message: {
+    success: false,
+    error: "Too Many Requests",
+    message: "Health scan is limited to once every 10 minutes.",
+    statusCode: 429,
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    return `health:${(req as any).user?.id || req.ip || "unknown"}`;
+  },
+});
+
+/**
+ * Rate limiter for RSS feed check.
+ * Prevents spamming outbound requests to feed URLs.
+ */
+export const rssFeedCheckRateLimiter = rateLimit({
+  windowMs: 2 * 60_000, // 2 minutes
+  max: 5,
+  message: {
+    success: false,
+    error: "Too Many Requests",
+    message: "RSS feed check rate limit exceeded. Please wait.",
+    statusCode: 429,
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    return `rss:${(req as any).user?.id || req.ip || "unknown"}`;
+  },
+});
+
+/**
+ * Rate limiter for content decay scan.
+ * Limit to 1 per 5 minutes per user.
+ */
+export const decayScanRateLimiter = rateLimit({
+  windowMs: 5 * 60_000, // 5 minutes
+  max: 1,
+  message: {
+    success: false,
+    error: "Too Many Requests",
+    message: "Decay scan is limited to once every 5 minutes.",
+    statusCode: 429,
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => {
+    return `decay:${(req as any).user?.id || req.ip || "unknown"}`;
   },
 });

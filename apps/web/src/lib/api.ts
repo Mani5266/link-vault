@@ -31,6 +31,7 @@ class ApiClient {
       method,
       headers: {
         "Content-Type": "application/json",
+        "X-Requested-With": "XMLHttpRequest",
         ...headers,
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
@@ -66,8 +67,12 @@ class ApiClient {
       const error = await response.json().catch(() => ({
         message: "An unexpected error occurred",
       }));
+      // Sanitize server error messages — don't expose raw details for 5xx errors
+      const safeMessage = response.status >= 500
+        ? "Something went wrong. Please try again."
+        : (error.message || "An unexpected error occurred");
       throw new ApiError(
-        error.message || response.statusText,
+        safeMessage,
         response.status
       );
     }

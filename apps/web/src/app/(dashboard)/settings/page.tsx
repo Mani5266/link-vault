@@ -23,6 +23,7 @@ const validatePassword = (pw: string): string | null => {
   if (!/[A-Z]/.test(pw)) return "Password must contain an uppercase letter.";
   if (!/[a-z]/.test(pw)) return "Password must contain a lowercase letter.";
   if (!/[0-9]/.test(pw)) return "Password must contain a number.";
+  if (!/[^A-Za-z0-9]/.test(pw)) return "Password must contain a special character (e.g. !@#$%^&*).";
   return null;
 };
 
@@ -352,7 +353,7 @@ function SecuritySection({
           </div>
 
           <p className="text-micro text-paper-faint px-0.5 uppercase tracking-editorial">
-            Min 8 characters with uppercase, lowercase & number
+            Min 8 characters with uppercase, lowercase, number & special character
           </p>
 
           <button

@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+
+// Max consecutive failures before temporary lockout
+const MAX_ATTEMPTS = 5;
 
 export function LoginForm() {
   const { signInWithPassword, signInWithMagicLink } = useAuth();
@@ -16,8 +19,22 @@ export function LoginForm() {
   const [useMagicLink, setUseMagicLink] = useState(false);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
 
+  // Exponential backoff state for brute-force protection
+  const failCountRef = useRef(0);
+  const lockUntilRef = useRef(0);
+  const [lockSeconds, setLockSeconds] = useState(0);
+
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Check client-side lockout
+    const now = Date.now();
+    if (now < lockUntilRef.current) {
+      const remaining = Math.ceil((lockUntilRef.current - now) / 1000);
+      setLockSeconds(remaining);
+      setError(`Too many attempts. Please wait ${remaining} seconds.`);
+      return;
+    }
 
     if (!email.trim()) {
       setError("Please enter your email address.");
@@ -32,8 +49,42 @@ export function LoginForm() {
       setError(null);
       setIsLoading(true);
       await signInWithPassword(email.trim(), password);
+
+      // Success — reset failure counter
+      failCountRef.current = 0;
+      lockUntilRef.current = 0;
+      setLockSeconds(0);
+
       router.push("/");
     } catch (err: any) {
+      // Increment failure count and apply exponential backoff
+      failCountRef.current += 1;
+      if (failCountRef.current >= MAX_ATTEMPTS) {
+        // Lockout: 2^(failures - MAX_ATTEMPTS) * 5 seconds, max 120s
+        const backoffSec = Math.min(
+          120,
+          Math.pow(2, failCountRef.current - MAX_ATTEMPTS) * 5
+        );
+        lockUntilRef.current = Date.now() + backoffSec * 1000;
+        setLockSeconds(backoffSec);
+        setError(
+          `Too many failed attempts. Please wait ${backoffSec} seconds before trying again.`
+        );
+        // Start a countdown to clear the lockout message
+        const intervalId = setInterval(() => {
+          const rem = Math.ceil((lockUntilRef.current - Date.now()) / 1000);
+          if (rem <= 0) {
+            setLockSeconds(0);
+            setError(null);
+            clearInterval(intervalId);
+          } else {
+            setLockSeconds(rem);
+            setError(`Too many failed attempts. Please wait ${rem} seconds.`);
+          }
+        }, 1000);
+        return;
+      }
+
       const msg = err.message || "Invalid email or password.";
       if (msg.toLowerCase().includes("invalid login credentials")) {
         setError("Invalid email or password. Please try again.");
@@ -184,7 +235,7 @@ export function LoginForm() {
 
       <button
         type="submit"
-        disabled={isLoading}
+        disabled={isLoading || lockSeconds > 0}
         className="btn-primary w-full"
       >
         {isLoading ? (

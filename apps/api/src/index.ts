@@ -11,6 +11,7 @@ import { corsOptions } from "./config/cors";
 import { generalRateLimiter } from "./middleware/rateLimit.middleware";
 import { errorHandler } from "./middleware/errorHandler.middleware";
 import routes from "./routes";
+import { csrfProtection } from "./middleware/csrf.middleware";
 import { logger } from "./utils/logger";
 import { getRedisConnection, closeRedisConnection } from "./config/redis";
 import { closeAllQueues } from "./queues";
@@ -28,11 +29,16 @@ import {
 const app = express();
 
 // ============================================================
+// Reverse Proxy Trust (Render sits behind a proxy)
+// ============================================================
+app.set("trust proxy", 1);
+
+// ============================================================
 // Security & Parsing Middleware
 // ============================================================
 app.use(helmet());
 app.use(cors(corsOptions));
-app.use(express.json({ limit: "6mb" }));
+app.use(express.json({ limit: "100kb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // ============================================================
@@ -46,6 +52,16 @@ if (env.NODE_ENV !== "test") {
 // Rate Limiting
 // ============================================================
 app.use("/api", generalRateLimiter);
+
+// ============================================================
+// CSRF Protection
+// ============================================================
+app.use("/api", csrfProtection);
+
+// ============================================================
+// Route-specific body size override (bookmark import needs larger payload)
+// ============================================================
+app.use("/api/v1/links/import", express.json({ limit: "6mb" }));
 
 // ============================================================
 // Routes

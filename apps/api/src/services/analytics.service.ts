@@ -21,11 +21,12 @@ export class AnalyticsService {
    * Get comprehensive analytics for a user's link collection.
    */
   static async getAnalytics(userId: string): Promise<AnalyticsData> {
-    // Fetch all links for the user (only fields we need)
+    // Fetch links for the user (only fields we need, capped at 5000)
     const { data: links, error } = await supabaseAdmin
       .from("links")
       .select("category, domain, tags, is_pinned, reading_status, created_at, collection_id")
-      .eq("user_id", userId);
+      .eq("user_id", userId)
+      .limit(5000);
 
     if (error) {
       logger.error({ error }, "Failed to fetch links for analytics");

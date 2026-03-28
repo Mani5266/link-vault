@@ -468,15 +468,29 @@ export function useLinks(options: UseLinksOptions = {}) {
     setError,
   ]);
 
-  // ---- Auto-poll when links are processing ----
+  // ---- Auto-poll when links are processing (with max retries) ----
   const hasProcessing = links.some(
     (l) => l.processing_status === "pending" || l.processing_status === "processing"
   );
+  const pollCountRef = useRef(0);
+  const MAX_POLL_RETRIES = 40; // 40 * 3s = 2 min max polling
 
   useEffect(() => {
-    if (!hasProcessing) return;
+    if (!hasProcessing) {
+      pollCountRef.current = 0; // Reset counter when nothing is processing
+      return;
+    }
+
+    if (pollCountRef.current >= MAX_POLL_RETRIES) {
+      return; // Stop polling to avoid infinite requests
+    }
 
     const interval = setInterval(() => {
+      pollCountRef.current += 1;
+      if (pollCountRef.current >= MAX_POLL_RETRIES) {
+        clearInterval(interval);
+        return;
+      }
       fetchLinks();
     }, 3000); // Poll every 3 seconds
 

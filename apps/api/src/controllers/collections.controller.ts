@@ -2,10 +2,7 @@ import { Request, Response } from "express";
 import { CollectionService } from "../services/collection.service";
 import { ApiResponse } from "../utils/apiResponse";
 import { logger } from "../utils/logger";
-
-function getParam(param: string | string[]): string {
-  return Array.isArray(param) ? param[0] : param;
-}
+import { getValidUUIDParam } from "../utils/validate";
 
 export class CollectionsController {
   /**
@@ -18,7 +15,7 @@ export class CollectionsController {
       ApiResponse.success(res, collections);
     } catch (error: any) {
       logger.error({ error }, "Failed to get collections");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to fetch collections");
     }
   }
 
@@ -35,7 +32,7 @@ export class CollectionsController {
       ApiResponse.created(res, collection, "Collection created");
     } catch (error: any) {
       logger.error({ error }, "Failed to create collection");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to create collection");
     }
   }
 
@@ -45,7 +42,11 @@ export class CollectionsController {
   static async updateCollection(req: Request, res: Response) {
     try {
       const userId = (req as any).user.id;
-      const id = getParam(req.params.id);
+      const id = getValidUUIDParam(req.params.id);
+      if (!id) {
+        ApiResponse.badRequest(res, "Invalid collection ID");
+        return;
+      }
 
       const collection = await CollectionService.updateCollection(
         userId,
@@ -55,7 +56,7 @@ export class CollectionsController {
       ApiResponse.success(res, collection, "Collection updated");
     } catch (error: any) {
       logger.error({ error }, "Failed to update collection");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to update collection");
     }
   }
 
@@ -65,13 +66,17 @@ export class CollectionsController {
   static async deleteCollection(req: Request, res: Response) {
     try {
       const userId = (req as any).user.id;
-      const id = getParam(req.params.id);
+      const id = getValidUUIDParam(req.params.id);
+      if (!id) {
+        ApiResponse.badRequest(res, "Invalid collection ID");
+        return;
+      }
 
       await CollectionService.deleteCollection(userId, id);
       ApiResponse.success(res, null, "Collection deleted");
     } catch (error: any) {
       logger.error({ error }, "Failed to delete collection");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to delete collection");
     }
   }
 }

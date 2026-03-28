@@ -162,6 +162,7 @@ export function NotesPanel({
             onChange={(e) => setNewNote(e.target.value)}
             placeholder="Add a note..."
             rows={3}
+            maxLength={10000}
             className="w-full bg-ink-200 border border-ink-300 px-3 py-2.5 text-sm text-paper placeholder:text-paper-faint font-body resize-none focus:outline-none focus:border-accent/50 transition-colors"
             style={{ borderRadius: "var(--radius-sm)" }}
             onKeyDown={(e) => {
@@ -221,6 +222,7 @@ export function NotesPanel({
                         value={editContent}
                         onChange={(e) => setEditContent(e.target.value)}
                         rows={3}
+                        maxLength={10000}
                         className="w-full bg-ink-200 border border-accent/30 px-3 py-2 text-sm text-paper font-body resize-none focus:outline-none focus:border-accent/50 transition-colors"
                         style={{ borderRadius: "var(--radius-sm)" }}
                         autoFocus

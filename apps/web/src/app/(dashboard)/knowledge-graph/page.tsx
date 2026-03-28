@@ -232,7 +232,14 @@ export default function KnowledgeGraphPage() {
             onNodeHover={(node: any) => setHoveredNode(node || null)}
             onNodeClick={(node: any) => {
               if (node.url) {
-                window.open(node.url, "_blank");
+                try {
+                  const parsed = new URL(node.url);
+                  if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+                    window.open(node.url, "_blank", "noopener,noreferrer");
+                  }
+                } catch {
+                  // Invalid URL — ignore click
+                }
               }
             }}
             nodeCanvasObject={(node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {

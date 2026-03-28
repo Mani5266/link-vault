@@ -11,6 +11,18 @@ import { AIBadge } from "@/components/ai/AIBadge";
 // Editorial design: hairline borders, warm tones, accent-top hover
 // ============================================================
 
+/** Only allow http/https favicon URLs to prevent javascript: or data: injection */
+function getSafeFaviconUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") return url;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 interface LinkCardProps {
   link: Link;
   viewMode: "grid" | "list";
@@ -250,9 +262,9 @@ function GridCard({
       <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-2">
         <div className="flex items-center gap-2 min-w-0">
           {/* Favicon or emoji */}
-          {link.favicon_url ? (
+          {getSafeFaviconUrl(link.favicon_url) ? (
             <img
-              src={link.favicon_url}
+              src={getSafeFaviconUrl(link.favicon_url)!}
               alt=""
               className="w-4 h-4 shrink-0 opacity-70"
               style={{ borderRadius: "2px" }}
@@ -262,7 +274,7 @@ function GridCard({
               }}
             />
           ) : null}
-          <span className={cn("text-sm shrink-0", link.favicon_url && "hidden")}>
+          <span className={cn("text-sm shrink-0", getSafeFaviconUrl(link.favicon_url) && "hidden")}>
             {displayEmoji}
           </span>
           <span className="mono-domain truncate">{link.domain}</span>
@@ -451,9 +463,9 @@ function ListRow({
 
         {/* Favicon / emoji — compact square */}
         <div className="shrink-0 w-9 h-9 bg-ink-200 flex items-center justify-center" style={{ borderRadius: "var(--radius-sm)" }}>
-          {link.favicon_url ? (
+          {getSafeFaviconUrl(link.favicon_url) ? (
             <img
-              src={link.favicon_url}
+              src={getSafeFaviconUrl(link.favicon_url)!}
               alt=""
               className="w-4 h-4 opacity-70"
               style={{ borderRadius: "2px" }}
@@ -658,7 +670,7 @@ function ContextMenu({
       <MenuButton onClick={() => { onCopy(); }}>
         {copied ? "Copied!" : "Copy URL"}
       </MenuButton>
-      <MenuButton onClick={() => window.open(link.url, "_blank")}>
+      <MenuButton onClick={() => window.open(link.url, "_blank", "noopener,noreferrer")}>
         Open in new tab
       </MenuButton>
       <div className="h-px bg-ink-300 mx-2 my-1" />

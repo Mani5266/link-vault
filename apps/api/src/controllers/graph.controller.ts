@@ -151,7 +151,7 @@ export class GraphController {
       ApiResponse.success(res, { nodes, edges });
     } catch (error: any) {
       logger.error({ error }, "Failed to build knowledge graph");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to build knowledge graph");
     }
   }
 }

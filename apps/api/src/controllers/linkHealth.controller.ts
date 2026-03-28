@@ -17,7 +17,7 @@ export class LinkHealthController {
       ApiResponse.success(res, results, `Checked ${results.length} links`);
     } catch (error: any) {
       logger.error({ error }, "Failed to scan link health");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to scan link health");
     }
   }
 }

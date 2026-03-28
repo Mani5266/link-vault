@@ -19,9 +19,13 @@ export function getRedisConnection(): IORedis | null {
   }
 
   if (!connection) {
+    const isProduction = process.env.NODE_ENV === "production";
+
     connection = new IORedis(env.REDIS_URL, {
       maxRetriesPerRequest: null, // Required by BullMQ
       enableReadyCheck: false,
+      // Enforce TLS in production (Render Redis uses rediss:// URLs)
+      ...(isProduction && env.REDIS_URL.startsWith("rediss://") ? { tls: {} } : {}),
       retryStrategy: (times) => {
         if (times > 5) {
           logger.error("Redis connection failed after 5 retries");

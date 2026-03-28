@@ -45,7 +45,7 @@ export class DecayController {
       });
     } catch (error: any) {
       logger.error({ error }, "Failed to get decay scores");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to fetch decay scores");
     }
   }
 
@@ -122,7 +122,7 @@ export class DecayController {
       });
     } catch (error: any) {
       logger.error({ error }, "Failed to get decay summary");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to fetch decay summary");
     }
   }
 
@@ -191,7 +191,7 @@ export class DecayController {
       }
     } catch (error: any) {
       logger.error({ error }, "Failed to trigger decay scan");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to trigger decay scan");
     }
   }
 }

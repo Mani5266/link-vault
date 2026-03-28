@@ -2,10 +2,7 @@ import { Request, Response } from "express";
 import { SmartCollectionService } from "../services/smartCollection.service";
 import { ApiResponse } from "../utils/apiResponse";
 import { logger } from "../utils/logger";
-
-function getParam(param: string | string[]): string {
-  return Array.isArray(param) ? param[0] : param;
-}
+import { getValidUUIDParam } from "../utils/validate";
 
 export class SmartCollectionsController {
   /** GET /api/v1/smart-collections */
@@ -16,7 +13,7 @@ export class SmartCollectionsController {
       ApiResponse.success(res, data);
     } catch (error: any) {
       logger.error({ error }, "Failed to get smart collections");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to fetch smart collections");
     }
   }
 
@@ -24,7 +21,11 @@ export class SmartCollectionsController {
   static async getById(req: Request, res: Response) {
     try {
       const userId = (req as any).user.id;
-      const id = getParam(req.params.id);
+      const id = getValidUUIDParam(req.params.id);
+      if (!id) {
+        ApiResponse.badRequest(res, "Invalid smart collection ID");
+        return;
+      }
       const sc = await SmartCollectionService.getById(userId, id);
       if (!sc) {
         ApiResponse.notFound(res, "Smart collection not found");
@@ -33,7 +34,7 @@ export class SmartCollectionsController {
       ApiResponse.success(res, sc);
     } catch (error: any) {
       logger.error({ error }, "Failed to get smart collection");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to fetch smart collection");
     }
   }
 
@@ -41,7 +42,11 @@ export class SmartCollectionsController {
   static async getLinks(req: Request, res: Response) {
     try {
       const userId = (req as any).user.id;
-      const id = getParam(req.params.id);
+      const id = getValidUUIDParam(req.params.id);
+      if (!id) {
+        ApiResponse.badRequest(res, "Invalid smart collection ID");
+        return;
+      }
       const sc = await SmartCollectionService.getById(userId, id);
       if (!sc) {
         ApiResponse.notFound(res, "Smart collection not found");
@@ -55,7 +60,7 @@ export class SmartCollectionsController {
       ApiResponse.success(res, { links, total: count });
     } catch (error: any) {
       logger.error({ error }, "Failed to get smart collection links");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to fetch smart collection links");
     }
   }
 
@@ -67,7 +72,7 @@ export class SmartCollectionsController {
       ApiResponse.created(res, sc, "Smart collection created");
     } catch (error: any) {
       logger.error({ error }, "Failed to create smart collection");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to create smart collection");
     }
   }
 
@@ -75,12 +80,16 @@ export class SmartCollectionsController {
   static async update(req: Request, res: Response) {
     try {
       const userId = (req as any).user.id;
-      const id = getParam(req.params.id);
+      const id = getValidUUIDParam(req.params.id);
+      if (!id) {
+        ApiResponse.badRequest(res, "Invalid smart collection ID");
+        return;
+      }
       const sc = await SmartCollectionService.update(userId, id, req.body);
       ApiResponse.success(res, sc, "Smart collection updated");
     } catch (error: any) {
       logger.error({ error }, "Failed to update smart collection");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to update smart collection");
     }
   }
 
@@ -88,12 +97,16 @@ export class SmartCollectionsController {
   static async remove(req: Request, res: Response) {
     try {
       const userId = (req as any).user.id;
-      const id = getParam(req.params.id);
+      const id = getValidUUIDParam(req.params.id);
+      if (!id) {
+        ApiResponse.badRequest(res, "Invalid smart collection ID");
+        return;
+      }
       await SmartCollectionService.delete(userId, id);
       ApiResponse.success(res, null, "Smart collection deleted");
     } catch (error: any) {
       logger.error({ error }, "Failed to delete smart collection");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to delete smart collection");
     }
   }
 }

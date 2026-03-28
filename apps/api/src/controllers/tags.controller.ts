@@ -19,7 +19,7 @@ export class TagsController {
       ApiResponse.success(res, tags);
     } catch (error: any) {
       logger.error({ error }, "Failed to get tags");
-      ApiResponse.error(res, error.message || "Failed to fetch tags");
+      ApiResponse.error(res, "Failed to fetch tags");
     }
   }
 
@@ -42,7 +42,7 @@ export class TagsController {
     } catch (error: any) {
       const status = error.statusCode || 500;
       logger.error({ error }, "Failed to rename tag");
-      ApiResponse.error(res, error.message || "Failed to rename tag", status);
+      ApiResponse.error(res, "Failed to rename tag", status);
     }
   }
 
@@ -65,7 +65,7 @@ export class TagsController {
     } catch (error: any) {
       const status = error.statusCode || 500;
       logger.error({ error }, "Failed to delete tag");
-      ApiResponse.error(res, error.message || "Failed to delete tag", status);
+      ApiResponse.error(res, "Failed to delete tag", status);
     }
   }
 
@@ -88,7 +88,7 @@ export class TagsController {
     } catch (error: any) {
       const status = error.statusCode || 500;
       logger.error({ error }, "Failed to merge tags");
-      ApiResponse.error(res, error.message || "Failed to merge tags", status);
+      ApiResponse.error(res, "Failed to merge tags", status);
     }
   }
 }

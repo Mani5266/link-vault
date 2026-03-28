@@ -49,6 +49,19 @@ export default function RssFeedsPage() {
 
   async function handleAdd() {
     if (!addUrl.trim() || !accessToken) return;
+
+    // Client-side URL validation
+    try {
+      const parsed = new URL(addUrl.trim());
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+        addToast("Please enter an http or https URL", "error");
+        return;
+      }
+    } catch {
+      addToast("Please enter a valid URL", "error");
+      return;
+    }
+
     setAdding(true);
     try {
       const res = await apiClient.post<ApiResponse<RssFeed>>(

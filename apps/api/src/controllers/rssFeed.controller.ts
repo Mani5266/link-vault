@@ -3,6 +3,9 @@ import { ApiResponse } from "../utils/apiResponse";
 import { logger } from "../utils/logger";
 import { supabaseAdmin } from "../config/supabase";
 import { LinkService } from "../services/link.service";
+import { validateUrlForFetch } from "../utils/ssrf";
+import { isValidUrl } from "@linkvault/shared";
+import { getValidUUIDParam } from "../utils/validate";
 
 export class RssFeedController {
   /**
@@ -27,7 +30,7 @@ export class RssFeedController {
       ApiResponse.success(res, data || []);
     } catch (error: any) {
       logger.error({ error }, "Failed to get feeds");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to fetch feeds");
     }
   }
 
@@ -41,6 +44,20 @@ export class RssFeedController {
 
       if (!feed_url || typeof feed_url !== "string") {
         ApiResponse.badRequest(res, "Feed URL is required");
+        return;
+      }
+
+      // Validate URL format
+      if (!isValidUrl(feed_url.trim())) {
+        ApiResponse.badRequest(res, "Invalid feed URL format");
+        return;
+      }
+
+      // SSRF protection
+      try {
+        await validateUrlForFetch(feed_url.trim());
+      } catch (ssrfErr: any) {
+        ApiResponse.badRequest(res, ssrfErr.message || "URL is not allowed");
         return;
       }
 
@@ -87,7 +104,7 @@ export class RssFeedController {
       ApiResponse.created(res, data, "Feed added");
     } catch (error: any) {
       logger.error({ error }, "Failed to add feed");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to add feed");
     }
   }
 
@@ -97,9 +114,11 @@ export class RssFeedController {
   static async deleteFeed(req: Request, res: Response) {
     try {
       const userId = (req as any).user.id;
-      const feedId = Array.isArray(req.params.id)
-        ? req.params.id[0]
-        : req.params.id;
+      const feedId = getValidUUIDParam(req.params.id);
+      if (!feedId) {
+        ApiResponse.badRequest(res, "Invalid feed ID");
+        return;
+      }
 
       const { error } = await supabaseAdmin
         .from("rss_feeds")
@@ -116,7 +135,7 @@ export class RssFeedController {
       ApiResponse.success(res, null, "Feed deleted");
     } catch (error: any) {
       logger.error({ error }, "Failed to delete feed");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to delete feed");
     }
   }
 
@@ -126,9 +145,11 @@ export class RssFeedController {
   static async updateFeed(req: Request, res: Response) {
     try {
       const userId = (req as any).user.id;
-      const feedId = Array.isArray(req.params.id)
-        ? req.params.id[0]
-        : req.params.id;
+      const feedId = getValidUUIDParam(req.params.id);
+      if (!feedId) {
+        ApiResponse.badRequest(res, "Invalid feed ID");
+        return;
+      }
       const { is_active, collection_id } = req.body;
 
       const updates: Record<string, unknown> = {
@@ -154,7 +175,7 @@ export class RssFeedController {
       ApiResponse.success(res, data, "Feed updated");
     } catch (error: any) {
       logger.error({ error }, "Failed to update feed");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to update feed");
     }
   }
 
@@ -165,9 +186,11 @@ export class RssFeedController {
   static async checkFeed(req: Request, res: Response) {
     try {
       const userId = (req as any).user.id;
-      const feedId = Array.isArray(req.params.id)
-        ? req.params.id[0]
-        : req.params.id;
+      const feedId = getValidUUIDParam(req.params.id);
+      if (!feedId) {
+        ApiResponse.badRequest(res, "Invalid feed ID");
+        return;
+      }
 
       // Get the feed
       const { data: feed, error: feedErr } = await supabaseAdmin
@@ -267,7 +290,7 @@ export class RssFeedController {
       );
     } catch (error: any) {
       logger.error({ error }, "Failed to check feed");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to check feed");
     }
   }
 
@@ -278,9 +301,11 @@ export class RssFeedController {
   static async getFeedItems(req: Request, res: Response) {
     try {
       const userId = (req as any).user.id;
-      const feedId = Array.isArray(req.params.id)
-        ? req.params.id[0]
-        : req.params.id;
+      const feedId = getValidUUIDParam(req.params.id);
+      if (!feedId) {
+        ApiResponse.badRequest(res, "Invalid feed ID");
+        return;
+      }
 
       const { data, error } = await supabaseAdmin
         .from("rss_feed_items")
@@ -299,7 +324,7 @@ export class RssFeedController {
       ApiResponse.success(res, data || []);
     } catch (error: any) {
       logger.error({ error }, "Failed to get feed items");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to fetch feed items");
     }
   }
 }

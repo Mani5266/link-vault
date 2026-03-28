@@ -37,7 +37,7 @@ export class DigestController {
       });
     } catch (error: any) {
       logger.error({ error }, "Failed to get digests");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to fetch digests");
     }
   }
 
@@ -80,7 +80,7 @@ export class DigestController {
       }
     } catch (error: any) {
       logger.error({ error }, "Failed to generate digest");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to generate digest");
     }
   }
 
@@ -108,7 +108,7 @@ export class DigestController {
       ApiResponse.success(res, null, "Digest deleted");
     } catch (error: any) {
       logger.error({ error }, "Failed to delete digest");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to delete digest");
     }
   }
 }

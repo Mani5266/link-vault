@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { DuplicateService } from "../services/duplicate.service";
 import { ApiResponse } from "../utils/apiResponse";
 import { logger } from "../utils/logger";
+import { isUUID } from "../utils/validate";
 
 // ============================================================
 // DuplicatesController — Handles duplicate detection endpoints
@@ -24,7 +25,7 @@ export class DuplicatesController {
       });
     } catch (error: any) {
       logger.error({ error }, "Failed to find duplicates");
-      ApiResponse.error(res, error.message || "Failed to find duplicates");
+      ApiResponse.error(res, "Failed to find duplicates");
     }
   }
 
@@ -36,6 +37,15 @@ export class DuplicatesController {
     try {
       const userId = (req as any).user.id;
       const { keep_id, delete_ids } = req.body;
+
+      if (!isUUID(keep_id)) {
+        ApiResponse.badRequest(res, "Invalid keep_id");
+        return;
+      }
+      if (!Array.isArray(delete_ids) || delete_ids.length === 0 || !delete_ids.every(isUUID)) {
+        ApiResponse.badRequest(res, "Invalid or missing delete_ids");
+        return;
+      }
 
       const result = await DuplicateService.mergeDuplicates(
         userId,
@@ -53,7 +63,7 @@ export class DuplicatesController {
       logger.error({ error }, "Failed to merge duplicates");
       ApiResponse.error(
         res,
-        error.message || "Failed to merge duplicates",
+        "Failed to merge duplicates",
         status
       );
     }

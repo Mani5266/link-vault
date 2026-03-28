@@ -93,12 +93,13 @@ export class DuplicateService {
    * Fetches all links, groups by canonical URL, returns groups with 2+ links.
    */
   static async findDuplicates(userId: string): Promise<DuplicateGroup[]> {
-    // Fetch all links for the user (no pagination — we need all of them for grouping)
+    // Fetch links for the user (capped at 5000 to prevent memory issues)
     const { data: links, error } = await supabaseAdmin
       .from("links")
       .select("*")
       .eq("user_id", userId)
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: true })
+      .limit(5000);
 
     if (error) {
       throw new Error(`Failed to fetch links: ${error.message}`);

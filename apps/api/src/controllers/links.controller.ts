@@ -4,6 +4,7 @@ import { AIService } from "../services/ai.service";
 import { ApiResponse } from "../utils/apiResponse";
 import { parseBookmarksHtml } from "../utils/bookmarkParser";
 import { logger } from "../utils/logger";
+import { getValidUUIDParam, isUUID } from "../utils/validate";
 import type { LinkFilters } from "@linkvault/shared";
 import { LIMITS } from "@linkvault/shared";
 import { getAIProcessingQueue } from "../queues";
@@ -30,7 +31,7 @@ export class LinksController {
       });
     } catch (error: any) {
       logger.error({ error }, "Failed to get links");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to load links");
     }
   }
 
@@ -40,7 +41,11 @@ export class LinksController {
   static async getLinkById(req: Request, res: Response) {
     try {
       const userId = (req as any).user.id;
-      const id = getParam(req.params.id);
+      const id = getValidUUIDParam(req.params.id);
+      if (!id) {
+        ApiResponse.badRequest(res, "Invalid link ID");
+        return;
+      }
 
       const link = await LinkService.getLinkById(userId, id);
 
@@ -52,7 +57,7 @@ export class LinksController {
       ApiResponse.success(res, link);
     } catch (error: any) {
       logger.error({ error }, "Failed to get link");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to load link");
     }
   }
 
@@ -129,7 +134,7 @@ export class LinksController {
         return;
       }
       logger.error({ error }, "Failed to create link");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to create link");
     }
   }
 
@@ -139,13 +144,17 @@ export class LinksController {
   static async updateLink(req: Request, res: Response) {
     try {
       const userId = (req as any).user.id;
-      const id = getParam(req.params.id);
+      const id = getValidUUIDParam(req.params.id);
+      if (!id) {
+        ApiResponse.badRequest(res, "Invalid link ID");
+        return;
+      }
 
       const link = await LinkService.updateLink(userId, id, req.body);
       ApiResponse.success(res, link, "Link updated");
     } catch (error: any) {
       logger.error({ error }, "Failed to update link");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to update link");
     }
   }
 
@@ -155,13 +164,17 @@ export class LinksController {
   static async deleteLink(req: Request, res: Response) {
     try {
       const userId = (req as any).user.id;
-      const id = getParam(req.params.id);
+      const id = getValidUUIDParam(req.params.id);
+      if (!id) {
+        ApiResponse.badRequest(res, "Invalid link ID");
+        return;
+      }
 
       await LinkService.deleteLink(userId, id);
       ApiResponse.success(res, null, "Link deleted");
     } catch (error: any) {
       logger.error({ error }, "Failed to delete link");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to delete link");
     }
   }
 
@@ -173,11 +186,16 @@ export class LinksController {
       const userId = (req as any).user.id;
       const { ids } = req.body;
 
+      if (!Array.isArray(ids) || ids.length === 0 || !ids.every(isUUID)) {
+        ApiResponse.badRequest(res, "Invalid or missing link IDs");
+        return;
+      }
+
       await LinkService.bulkDelete(userId, ids);
       ApiResponse.success(res, null, `${ids.length} links deleted`);
     } catch (error: any) {
       logger.error({ error }, "Failed to bulk delete links");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to delete links");
     }
   }
 
@@ -189,11 +207,20 @@ export class LinksController {
       const userId = (req as any).user.id;
       const { ids, collection_id } = req.body;
 
+      if (!Array.isArray(ids) || ids.length === 0 || !ids.every(isUUID)) {
+        ApiResponse.badRequest(res, "Invalid or missing link IDs");
+        return;
+      }
+      if (collection_id !== null && collection_id !== undefined && !isUUID(collection_id)) {
+        ApiResponse.badRequest(res, "Invalid collection ID");
+        return;
+      }
+
       await LinkService.bulkMove(userId, ids, collection_id);
       ApiResponse.success(res, null, `${ids.length} links moved`);
     } catch (error: any) {
       logger.error({ error }, "Failed to bulk move links");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to move links");
     }
   }
 
@@ -210,7 +237,7 @@ export class LinksController {
       ApiResponse.success(res, links, `${links.length} links exported`);
     } catch (error: any) {
       logger.error({ error }, "Failed to export links");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to export links");
     }
   }
 
@@ -261,7 +288,7 @@ export class LinksController {
       ApiResponse.success(res, result, `Imported ${result.imported} bookmarks`);
     } catch (error: any) {
       logger.error({ error }, "Failed to import bookmarks");
-      ApiResponse.error(res, error.message);
+      ApiResponse.error(res, "Failed to import bookmarks");
     }
   }
 }
