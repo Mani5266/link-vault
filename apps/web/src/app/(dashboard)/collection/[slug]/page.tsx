@@ -91,6 +91,17 @@ export default function CollectionPage({
     [collection, collections]
   );
 
+  // Find child sub-collections
+  const childCollections = useMemo(
+    () =>
+      collection
+        ? collections
+            .filter((c) => c.parent_id === collection.id)
+            .sort((a, b) => a.position - b.position)
+        : [],
+    [collection, collections]
+  );
+
   const handleSortChange = useCallback((sortBy: LinkSortField, sortDir: SortDirection) => {
     setFilters({ sort_by: sortBy, sort_dir: sortDir });
   }, [setFilters]);
@@ -170,6 +181,45 @@ export default function CollectionPage({
         {/* Hairline separator */}
         <div className="h-px bg-ink-300 mt-6" />
       </div>
+
+      {/* Sub-collection folder cards */}
+      {childCollections.length > 0 && (
+        <div className="mb-6">
+          <p className="editorial-label text-paper-faint mb-3">Sub-collections</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {childCollections.map((child) => (
+              <Link
+                key={child.id}
+                href={`/collection/${child.slug}`}
+                className="group flex items-center gap-3 px-4 py-3 bg-ink-100 border border-ink-300 hover:border-accent/40 hover:bg-ink-200 transition-all duration-200 hover:-translate-y-0.5"
+                style={{ borderRadius: "var(--radius-md)" }}
+              >
+                <span className="text-lg shrink-0">{child.emoji}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-paper truncate group-hover:text-accent transition-colors duration-200">
+                    {child.name}
+                  </p>
+                  {child.link_count !== undefined && (
+                    <p className="text-xs text-paper-faint mt-0.5">
+                      {child.link_count} link{child.link_count === 1 ? "" : "s"}
+                    </p>
+                  )}
+                </div>
+                <svg
+                  className="w-3.5 h-3.5 text-paper-faint group-hover:text-accent shrink-0 opacity-0 group-hover:opacity-100 transition-all duration-200 -translate-x-1 group-hover:translate-x-0"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+            ))}
+          </div>
+          <div className="h-px bg-ink-300 mt-6" />
+        </div>
+      )}
 
       {/* Sort & Filter Bar */}
       {!isLoading && (links.length > 0 || filters.category || filters.is_pinned) && (
